@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Download, ExternalLink, ChevronRight } from 'lucide-react';
+import { FileText, Download, ExternalLink } from 'lucide-react';
 import { useInvoices } from '../../hooks/useBilling';
 import type { Invoice } from '../../types/billing';
 import InvoiceStatusBadge from '../../components/billing/InvoiceStatusBadge';
@@ -50,9 +50,9 @@ const InvoiceListPage: React.FC = () => {
                     <InvoiceStatusBadge status={invoice.status} />
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    {invoice.status === 'pending' && invoice.invoice_url && (
+                    {invoice.status === 'pending' && invoice.invoiceUrl && (
                       <a 
-                        href={invoice.invoice_url}
+                        href={invoice.invoiceUrl}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition"

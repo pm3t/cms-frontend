@@ -5,6 +5,12 @@ import { Button } from '../../components/ui/Button';
 import Select from 'react-select';
 import api from '../../lib/axios';
 
+interface TransactionFormProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSuccess: () => Promise<void> | void;
+}
+
 export default function TransactionForm({ isOpen, onClose, onSuccess }: TransactionFormProps) {
     const [type, setType] = useState('OFFERING');
     const [amount, setAmount] = useState('');

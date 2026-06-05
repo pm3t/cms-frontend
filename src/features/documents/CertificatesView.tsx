@@ -196,7 +196,7 @@ export default function CertificatesView({ certificates, members, templates, onR
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-bold text-gray-800 text-xs bg-gray-100 px-2 py-1 rounded-lg">{cert.certificateNumber}</span>
-                        {cert.fileUrl && <FileText className="w-3.5 h-3.5 text-red-500 shrink-0" title="PDF Terunggah" />}
+                        {cert.fileUrl && <span title="PDF Terunggah"><FileText className="w-3.5 h-3.5 text-red-500 shrink-0" /></span>}
                       </div>
                     </td>
                     <td className="px-4 py-4">

@@ -123,9 +123,9 @@ export default function UserManagement() {
                   <strong>Limit paket tercapai!</strong> Paket {sub?.plan?.name} Anda hanya mengizinkan maksimal {maxUsers} user admin.
                 </p>
               </div>
-              <Button asChild className="w-full bg-amber-600 hover:bg-amber-700 text-xs" size="sm">
-                <a href="/billing/upgrade">Upgrade Paket Sekarang</a>
-              </Button>
+              <a href="/billing/upgrade" className="w-full block text-center bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg text-xs transition-colors">
+                Upgrade Paket Sekarang
+              </a>
             </div>
           ) : (
             <form onSubmit={handleAddUser} className="space-y-4">
