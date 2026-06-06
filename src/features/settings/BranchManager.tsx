@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Plus, MapPin } from 'lucide-react';
-import axios from 'axios';
-import { API_BASE_URL } from '../../lib/config';
+import api from '../../lib/axios';
 
 export default function BranchManager() {
     const [branches, setBranches] = useState<any[]>([]);
@@ -11,9 +10,7 @@ export default function BranchManager() {
     const [newBranch, setNewBranch] = useState({ name: '', address: '', phone: '' });
 
     const fetchProfile = () => {
-        axios.get(`${API_BASE_URL}/tenant/profile`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }).then(res => {
+        api.get('/tenant/profile').then(res => {
             if (res.data.branches) setBranches(res.data.branches);
         });
     }
@@ -25,9 +22,7 @@ export default function BranchManager() {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post(`${API_BASE_URL}/tenant/branch`, newBranch, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            await api.post('/tenant/branch', newBranch);
             setShowForm(false);
             setNewBranch({ name: '', address: '', phone: '' });
             fetchProfile();

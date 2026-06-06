@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
-import axios from 'axios';
-import { API_BASE_URL } from '../../lib/config';
+import api from '../../lib/axios';
 
 export default function BrandingForm() {
     const [formData, setFormData] = useState({ primaryColor: '#3b82f6', logoUrl: '' });
 
     useEffect(() => {
-        axios.get(`${API_BASE_URL}/tenant/profile`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }).then(res => {
+        api.get('/tenant/profile').then(res => {
             setFormData({
                 primaryColor: res.data.primaryColor || '#3b82f6',
                 logoUrl: res.data.logoUrl || ''
@@ -20,9 +17,7 @@ export default function BrandingForm() {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.patch(`${API_BASE_URL}/tenant/profile`, formData, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            await api.patch('/tenant/profile', formData);
             alert('Branding updated successfully! Color schemes will apply on next refresh.');
         } catch (err) {
             alert('Config Update failed.');

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import axios from 'axios';
-import { API_BASE_URL } from '../../lib/config';
+import api from '../../lib/axios';
 
 export default function ChurchProfileForm() {
     const [formData, setFormData] = useState({ name: '', address: '', phone: '', email: '' });
@@ -10,9 +9,7 @@ export default function ChurchProfileForm() {
 
     useEffect(() => {
         // Fetch profile
-        axios.get(`${API_BASE_URL}/tenant/profile`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }).then(res => {
+        api.get('/tenant/profile').then(res => {
             setFormData({
                 name: res.data.name || '',
                 address: res.data.address || '',
@@ -32,12 +29,10 @@ export default function ChurchProfileForm() {
             const payload = { ...formData };
             delete (payload as any).name; // Name belongs to Organization root, updating it implies separate mechanism
 
-            await axios.patch(`${API_BASE_URL}/tenant/profile`, payload, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            await api.patch('/tenant/profile', payload);
             alert('Profile updated successfully!');
         } catch (err: any) {
-            alert('Update failed: ' + JSON.stringify(err.response?.data?.error || err.message));
+            alert('Update failed: ' + (err.message || 'Unknown error'));
         }
     };
 

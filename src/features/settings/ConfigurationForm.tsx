@@ -1,24 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
-import axios from 'axios';
-import { API_BASE_URL } from '../../lib/config';
+import api from '../../lib/axios';
+import { useAuthStore } from '../../stores/authStore';
 
 export default function ConfigurationForm() {
     const [formData, setFormData] = useState({ timezone: 'Asia/Jakarta', currency: 'IDR', language: 'id' });
 
-    const getTenantId = () => {
-        const token = localStorage.getItem('token');
-        if (!token) return 'global';
-        try { return JSON.parse(atob(token.split('.')[1])).tenantId; } catch { return 'global'; }
-    };
-    const tenantId = getTenantId();
+    const user = useAuthStore(state => state.user);
+    const tenantId = user?.organization_id || 'global';
 
     const [pageSize, setPageSize] = useState(() => localStorage.getItem(`pageSize_${tenantId}`) || '10');
 
     useEffect(() => {
-        axios.get(`${API_BASE_URL}/tenant/profile`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }).then(res => {
+        api.get('/tenant/profile').then(res => {
             setFormData({
                 timezone: res.data.timezone || 'Asia/Jakarta',
                 currency: res.data.currency || 'IDR',
@@ -30,11 +24,9 @@ export default function ConfigurationForm() {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.patch(`${API_BASE_URL}/tenant/profile`, formData, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            await api.patch('/tenant/profile', formData);
             // Save local client setting
-            localStorage.setItem(`pageSize_\${tenantId}`, pageSize);
+            localStorage.setItem(`pageSize_${tenantId}`, pageSize);
 
             alert('Configuration updated successfully!');
             window.location.reload(); // Refresh to apply changes across app
