@@ -47,6 +47,7 @@ const DocumentDashboard = lazy(() => import('../features/documents/DocumentDashb
 const FacilityDashboard = lazy(() => import('../features/facility/FacilityDashboard'));
 const ReportingDashboard = lazy(() => import('../features/reporting/ReportingDashboard'));
 const DigitalDashboard = lazy(() => import('../features/digital/DigitalDashboard'));
+const SettingsLayout = lazy(() => import('../features/settings/SettingsLayout'));
 // --- END REAL FEATURE MODULES ---
 
 // Placeholder components for remaining routes
@@ -90,7 +91,7 @@ const AppRouter: React.FC = () => {
             <Route path="/digital" element={<DigitalDashboard />} />
             
             <Route path="/users" element={<UserManagementPage />} />
-            <Route path="/settings" element={<SettingsPlaceholder />} />
+            <Route path="/settings" element={<SettingsLayout />} />
             
             {/* Billing Routes */}
             <Route path="/billing" element={<BillingPage />} />
