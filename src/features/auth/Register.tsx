@@ -110,37 +110,6 @@ export default function Register() {
                     </Button>
                 </form>
 
-                {/* Testing Shortcuts */}
-                <div className="mt-8 pt-6 border-t border-gray-100 relative z-10">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Testing Shortcuts</p>
-                    <div className="grid grid-cols-2 gap-2">
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => setFormData({
-                                name: 'Benny Gunawan',
-                                email: 'benny.gunawan@gmail.com',
-                                churchName: 'GBI HOS',
-                                password: 'password123'
-                            })}
-                        >
-                            ⚡ Auto Fill
-                        </Button>
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => setFormData({
-                                name: 'Bambang Mulyatno',
-                                email: 'bambang.mulyatno@gmail.com',
-                                churchName: 'GKJ Bilur',
-                                password: 'password123'
-                            })}
-                        >
-                            Register GKJ Bilur
-                        </Button>
-                    </div>
-                </div>
-
                 <p className="mt-6 text-center text-sm text-gray-500 relative z-10">
                     Already have an account?{' '}
                     <a href="/login" className="font-semibold text-primary-600 hover:text-primary-500 transition-colors">

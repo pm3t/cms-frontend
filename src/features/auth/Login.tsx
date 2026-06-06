@@ -110,46 +110,6 @@ export default function Login() {
                     </Button>
                 </form>
 
-                {/* Testing Shortcuts */}
-                <div className="mt-8 pt-6 border-t border-gray-100">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Testing Shortcuts</p>
-                    <div className="grid grid-cols-2 gap-3">
-                        <button 
-                            type="button"
-                            onClick={() => {
-                                setTenantId('platform-admin');
-                                setEmail('superadmin@technohub.co.id');
-                                setPassword('password123');
-                            }}
-                            className="text-[10px] py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition flex items-center justify-center gap-1"
-                        >
-                            ⚡ Super Admin
-                        </button>
-                        <button 
-                            type="button"
-                            onClick={() => {
-                                setTenantId('gbi-hos');
-                                setEmail('benny.gunawan@gmail.com');
-                                setPassword('password123');
-                            }}
-                            className="text-[10px] py-2 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-bold transition flex items-center justify-center gap-1"
-                        >
-                            ⚡ Church Admin
-                        </button>
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                                setEmail('bambang.mulyatno@gmail.com');
-                                setPassword('password123');
-                                setTenantId('gkj-bilur');
-                            }}
-                        >
-                            GKJ Bilur Admin
-                        </Button>
-                    </div>
-                </div>
-
                 <p className="mt-6 text-center text-sm text-gray-500">
                     Don't have an account?{' '}
                     <a href="/register" className="font-semibold text-primary-600 hover:text-primary-500 transition-colors">
