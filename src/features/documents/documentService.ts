@@ -171,4 +171,30 @@ export const documentService = {
   async deleteTemplate(id: string): Promise<void> {
     await api.delete(`/documents/templates/${id}`);
   },
+
+  // ─── Sacrament Requests ──────────────────────────────────────────────────
+
+  async getSacramentRequests(filters?: { status?: string }): Promise<any[]> {
+    const params = new URLSearchParams();
+    if (filters?.status) params.set('status', filters.status);
+    const res = await api.get(`/documents/sacrament-requests?${params.toString()}`);
+    return res.data;
+  },
+
+  async getSacramentRequestById(id: string): Promise<any> {
+    const res = await api.get(`/documents/sacrament-requests/${id}`);
+    return res.data;
+  },
+
+  async approveSacramentRequest(id: string, formData: FormData): Promise<any> {
+    const res = await api.post(`/documents/sacrament-requests/${id}/approve`, formData, {
+      headers: { 'Content-Type': undefined }
+    });
+    return res.data;
+  },
+
+  async rejectSacramentRequest(id: string, notes: string): Promise<any> {
+    const res = await api.post(`/documents/sacrament-requests/${id}/reject`, { notes });
+    return res.data;
+  },
 };

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { FolderOpen, BookOpen, Award, FileCode } from 'lucide-react';
+import { FolderOpen, BookOpen, Award, FileCode, FileText } from 'lucide-react';
 import api from '../../lib/axios';
 import { documentService } from './documentService';
 import type { Document, Certificate, CertificateTemplate } from './documentService';
 import LibraryView from './LibraryView';
 import CertificatesView from './CertificatesView';
 import TemplatesView from './TemplatesView';
+import SacramentRequestsView from './SacramentRequestsView';
 
-type TabId = 'LIBRARY' | 'CERTIFICATES' | 'TEMPLATES';
+type TabId = 'LIBRARY' | 'CERTIFICATES' | 'TEMPLATES' | 'SACRAMENT_REQUESTS';
 
 export default function DocumentDashboard() {
   const [activeTab, setActiveTab] = useState<TabId>('LIBRARY');
@@ -43,6 +44,7 @@ export default function DocumentDashboard() {
     { id: 'LIBRARY', name: 'Perpustakaan Digital', icon: BookOpen, color: 'text-blue-500' },
     { id: 'CERTIFICATES', name: 'Sertifikat Jemaat', icon: Award, color: 'text-amber-500' },
     { id: 'TEMPLATES', name: 'Template Sertifikat', icon: FileCode, color: 'text-purple-500' },
+    { id: 'SACRAMENT_REQUESTS', name: 'Permohonan Sakramen', icon: FileText, color: 'text-rose-500' },
   ];
 
   return (
@@ -112,6 +114,7 @@ export default function DocumentDashboard() {
             {activeTab === 'LIBRARY' && <LibraryView documents={documents} onRefresh={fetchData} />}
             {activeTab === 'CERTIFICATES' && <CertificatesView certificates={certificates} members={members} templates={templates} onRefresh={fetchData} />}
             {activeTab === 'TEMPLATES' && <TemplatesView templates={templates} onRefresh={fetchData} />}
+            {activeTab === 'SACRAMENT_REQUESTS' && <SacramentRequestsView onRefresh={fetchData} />}
           </>
         )}
       </div>

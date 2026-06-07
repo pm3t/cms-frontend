@@ -12,6 +12,7 @@ export default function ServiceRoster() {
     const [members, setMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingRosterId, setEditingRosterId] = useState<string | null>(null);
     
     // Form state
     const [ministryId, setMinistryId] = useState('');
@@ -49,26 +50,72 @@ export default function ServiceRoster() {
         fetchData();
     }, []);
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const openCreateModal = () => {
+        setEditingRosterId(null);
+        setMinistryId('');
+        setDate('');
+        setWorshipServiceId('');
+        setStartTime('');
+        setEndTime('');
+        setPositions([{ role: '', memberId: '' }]);
+        setIsModalOpen(true);
+    };
+
+    const handleEditClick = (roster: any) => {
+        setEditingRosterId(roster.id);
+        setMinistryId(roster.ministryId);
+        // Format date to YYYY-MM-DD
+        const formattedDate = new Date(roster.date).toISOString().split('T')[0];
+        setDate(formattedDate);
+        setWorshipServiceId(roster.worshipServiceId || '');
+        setStartTime(roster.startTime || '');
+        setEndTime(roster.endTime || '');
+        setPositions(roster.positions.map((p: any) => ({
+            role: p.role,
+            memberId: p.memberId || ''
+        })));
+        setIsModalOpen(true);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/ministry/roster', { 
+            const payload = { 
                 ministryId, 
                 date, 
-                worshipServiceId: worshipServiceId || undefined,
+                worshipServiceId: worshipServiceId || null,
                 startTime, 
                 endTime, 
                 positions 
-            });
+            };
+
+            if (editingRosterId) {
+                await api.put(`/ministry/roster/${editingRosterId}`, payload);
+            } else {
+                await api.post('/ministry/roster', payload);
+            }
+
             setIsModalOpen(false);
+            setEditingRosterId(null);
             setPositions([{ role: '', memberId: '' }]);
             fetchData();
         } catch (err) {
-            alert('Failed to create roster');
+            alert(editingRosterId ? 'Failed to update roster' : 'Failed to create roster');
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm('Are you sure you want to delete this roster?')) return;
+        try {
+            await api.delete(`/ministry/roster/${id}`);
+            fetchData();
+        } catch (err) {
+            alert('Failed to delete roster');
         }
     };
 
     const addPosition = () => setPositions([...positions, { role: '', memberId: '' }]);
+    const removePosition = (index: number) => setPositions(positions.filter((_, idx) => idx !== index));
     const updatePosition = (index: number, field: string, value: string) => {
         const next = [...positions];
         (next[index] as any)[field] = value;
@@ -81,7 +128,7 @@ export default function ServiceRoster() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold text-gray-900">Service Roster & Scheduling</h3>
-                <Button onClick={() => setIsModalOpen(true)} className="bg-purple-600 hover:bg-purple-700">
+                <Button onClick={openCreateModal} className="bg-purple-600 hover:bg-purple-700">
                     <Plus className="w-4 h-4 mr-2" />
                     Create Roster
                 </Button>
@@ -102,7 +149,23 @@ export default function ServiceRoster() {
                             </div>
                         </div>
                         <div className="flex-1 p-6">
-                            <h5 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Assigned Personnel</h5>
+                            <div className="flex justify-between items-center mb-4">
+                                <h5 className="text-xs font-black text-gray-400 uppercase tracking-widest">Assigned Personnel</h5>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => handleEditClick(roster)}
+                                        className="text-xs font-bold text-purple-600 hover:text-purple-800 bg-purple-50 hover:bg-purple-100 px-3 py-1 rounded-lg transition-colors"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button 
+                                        onClick={() => handleDelete(roster.id)}
+                                        className="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {roster.positions.map((pos: any) => (
                                     <div key={pos.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
@@ -133,12 +196,20 @@ export default function ServiceRoster() {
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl w-full max-w-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-                        <h3 className="text-xl font-bold text-gray-900 mb-6">Create Service Roster</h3>
-                        <form onSubmit={handleCreate} className="space-y-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-6">
+                            {editingRosterId ? 'Edit Service Roster' : 'Create Service Roster'}
+                        </h3>
+                        <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">Ministry</label>
-                                    <select required value={ministryId} onChange={e => setMinistryId(e.target.value)} className="w-full px-4 py-2 border border-gray-200 rounded-lg">
+                                    <select 
+                                        required 
+                                        value={ministryId} 
+                                        onChange={e => setMinistryId(e.target.value)} 
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                                        disabled={!!editingRosterId}
+                                    >
                                         <option value="">Select Ministry...</option>
                                         {ministries.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                                     </select>
@@ -175,8 +246,8 @@ export default function ServiceRoster() {
                                     </Button>
                                 </div>
                                 {positions.map((pos, idx) => (
-                                    <div key={idx} className="grid grid-cols-2 gap-3 items-end">
-                                        <div>
+                                    <div key={idx} className="grid grid-cols-12 gap-3 items-end">
+                                        <div className="col-span-5">
                                             <input 
                                                 required
                                                 placeholder="Role (e.g. Guitarist)"
@@ -185,7 +256,7 @@ export default function ServiceRoster() {
                                                 className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm"
                                             />
                                         </div>
-                                        <div>
+                                        <div className="col-span-5">
                                             <SearchableMemberSelect 
                                                 members={members}
                                                 value={pos.memberId}
@@ -193,13 +264,26 @@ export default function ServiceRoster() {
                                                 placeholder="Choose Member..."
                                             />
                                         </div>
+                                        <div className="col-span-2">
+                                            <Button 
+                                                type="button" 
+                                                variant="outline" 
+                                                onClick={() => removePosition(idx)}
+                                                className="w-full text-red-500 border-red-100 hover:bg-red-50 px-2 py-2"
+                                                disabled={positions.length <= 1}
+                                            >
+                                                Remove
+                                            </Button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
 
                             <div className="flex gap-3 mt-8">
                                 <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="flex-1">Cancel</Button>
-                                <Button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700">Save Roster</Button>
+                                <Button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700">
+                                    {editingRosterId ? 'Update Roster' : 'Save Roster'}
+                                </Button>
                             </div>
                         </form>
                     </div>

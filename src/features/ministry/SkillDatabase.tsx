@@ -113,12 +113,12 @@ export default function SkillDatabase() {
                         <p className="text-blue-100 text-sm">Discover gifted members to serve in your ministries.</p>
                     </div>
                 </div>
-                <Button 
+                <button 
                     onClick={() => setIsManageSkillsOpen(true)} 
-                    className="bg-white text-indigo-700 hover:bg-indigo-50 font-bold shrink-0 shadow-sm border-none"
+                    className="bg-white text-indigo-700 hover:bg-indigo-50 font-bold shrink-0 shadow-sm px-4 py-2.5 rounded-lg text-sm transition-all duration-200 border-none cursor-pointer"
                 >
                     Manage Talent Types
-                </Button>
+                </button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

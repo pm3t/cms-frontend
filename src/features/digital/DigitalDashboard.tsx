@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { digitalService } from './digitalService';
 import { Video, FileText, Globe, Key, Trash2, Plus, Save, Play, Music, Volume2, Eye, X, BookOpen } from 'lucide-react';
 
-type TabId = 'SERMONS' | 'BULLETINS' | 'INTEGRATIONS';
+type TabId = 'SERMONS' | 'INTEGRATIONS';
 
 interface PreviewModalProps {
   isOpen: boolean;
@@ -96,7 +96,6 @@ function PreviewModal({ isOpen, onClose, title, type, url }: PreviewModalProps) 
 export default function DigitalDashboard() {
   const [tab, setTab] = useState<TabId>('SERMONS');
   const [sermons, setSermons] = useState<any[]>([]);
-  const [bulletins, setBulletins] = useState<any[]>([]);
   const [config, setConfig] = useState<any>(null);
 
   // Preview Modal State
@@ -109,7 +108,6 @@ export default function DigitalDashboard() {
 
   const fetchData = () => {
     digitalService.getSermons().then(setSermons).catch(console.error);
-    digitalService.getBulletins().then(setBulletins).catch(console.error);
     digitalService.getConfig().then(setConfig).catch(console.error);
   };
 
@@ -133,22 +131,6 @@ export default function DigitalDashboard() {
     } catch (err: any) { alert(err.message); }
   };
 
-  const handleAddBulletin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    try {
-      await digitalService.createBulletin({
-        title: formData.get('title'),
-        date: formData.get('date'),
-        content: formData.get('content') || undefined,
-        pdfUrl: formData.get('pdfUrl') || undefined,
-      });
-      form.reset();
-      fetchData();
-    } catch (err: any) { alert(err.message); }
-  };
-
   const handleSaveConfig = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -157,7 +139,6 @@ export default function DigitalDashboard() {
         liveStreamUrl: formData.get('liveStreamUrl'),
         socialWebhookUrl: formData.get('socialWebhookUrl'),
         autoPostSermons: formData.get('autoPostSermons') === 'on',
-        autoPostBulletins: formData.get('autoPostBulletins') === 'on',
       });
       alert('Konfigurasi disimpan');
       fetchData();
@@ -191,7 +172,6 @@ export default function DigitalDashboard() {
       <div className="flex border-b border-gray-200 bg-white rounded-t-2xl px-2 shadow-sm">
         {[
           { id: 'SERMONS', label: 'Arsip Khotbah', icon: Video },
-          { id: 'BULLETINS', label: 'Warta Jemaat', icon: FileText },
           { id: 'INTEGRATIONS', label: 'Integrasi', icon: Globe }
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id as TabId)} className={`flex items-center gap-2 px-5 py-4 text-sm font-bold border-b-2 cursor-pointer ${tab === t.id ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
@@ -248,46 +228,6 @@ export default function DigitalDashboard() {
                 </div>
               ))}
               {sermons.length === 0 && <p className="text-gray-400 text-sm text-center py-8">Belum ada arsip khotbah</p>}
-            </div>
-          </div>
-        )}
-
-        {tab === 'BULLETINS' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1 border border-gray-100 rounded-xl p-5 bg-gray-50">
-              <h3 className="font-bold mb-4">Tambah Warta Baru</h3>
-              <form onSubmit={handleAddBulletin} className="space-y-4">
-                <input name="title" required placeholder="Judul Warta Jemaat" className="w-full px-3 py-2 border rounded-lg text-sm bg-white" />
-                <input name="date" required type="date" className="w-full px-3 py-2 border rounded-lg text-sm bg-white" />
-                <input name="pdfUrl" required placeholder="Link PDF Warta (e.g. Google Drive/URL)" className="w-full px-3 py-2 border rounded-lg text-sm bg-white" />
-                <textarea name="content" rows={4} placeholder="Ringkasan Pengumuman / Isi Warta..." className="w-full px-3 py-2 border rounded-lg text-sm bg-white resize-none" />
-                <button className="w-full bg-purple-600 text-white font-bold py-2 rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors"><Plus className="w-4 h-4"/> Simpan Warta</button>
-              </form>
-            </div>
-            <div className="md:col-span-2 space-y-3">
-              {bulletins.map(b => (
-                <div key={b.id} className="border border-gray-100 p-4 rounded-xl flex justify-between items-center bg-white shadow-sm hover:border-purple-200 transition-all">
-                  <div className="space-y-1">
-                    <h4 className="font-bold text-gray-900 text-lg">{b.title}</h4>
-                    <p className="text-xs text-gray-500">{new Date(b.date).toLocaleDateString('id-ID')}</p>
-                    {b.content && <p className="text-xs text-gray-600 max-w-lg mt-1 whitespace-pre-line">{b.content}</p>}
-                    
-                    <div className="flex gap-2 pt-2">
-                      {b.pdfUrl && (
-                        <button
-                          onClick={() => openPreview(b.title, 'pdf', b.pdfUrl)}
-                          className="px-3 py-1.5 bg-orange-50 text-orange-700 text-xs font-semibold rounded-lg hover:bg-orange-100 transition-colors flex items-center gap-1 border border-orange-100"
-                        >
-                          <BookOpen className="w-3.5 h-3.5" />
-                          Preview PDF
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <button onClick={() => digitalService.deleteBulletin(b.id).then(fetchData)} className="text-red-500 p-2 hover:bg-red-50 rounded-lg cursor-pointer transition-colors"><Trash2 className="w-4 h-4" /></button>
-                </div>
-              ))}
-              {bulletins.length === 0 && <p className="text-gray-400 text-sm text-center py-8">Belum ada warta jemaat</p>}
             </div>
           </div>
         )}
