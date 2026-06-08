@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, UserPlus, Shield, Mail, Calendar, AlertCircle, Loader2 } from 'lucide-react';
+import { Users, UserPlus, Shield, Mail, Calendar, AlertCircle, Loader2, Trash2, KeyRound } from 'lucide-react';
 import api from '../../lib/axios';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -22,6 +22,12 @@ export default function UserManagement() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Reset & Delete States
+  const [resettingUser, setResettingUser] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   const { data: sub } = useSubscription();
 
@@ -53,6 +59,39 @@ export default function UserManagement() {
       setError(err.response?.data?.error || 'Gagal menambahkan user');
     } finally {
       setAddingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus user ini?')) return;
+
+    setDeletingUserId(userId);
+    setError(null);
+    try {
+      await api.delete(`/users/${userId}`);
+      alert('User berhasil dihapus!');
+      fetchUsers();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Gagal menghapus user');
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resettingUser) return;
+
+    setResettingPassword(true);
+    try {
+      await api.post(`/users/${resettingUser.id}/reset-password`, { password: newPassword });
+      alert('Password berhasil direset!');
+      setResettingUser(null);
+      setNewPassword('');
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Gagal mereset password');
+    } finally {
+      setResettingPassword(false);
     }
   };
 
@@ -91,9 +130,32 @@ export default function UserManagement() {
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="text-[10px] text-gray-400 block uppercase font-bold">Terdaftar</span>
-                <span className="text-xs font-medium">{new Date(user.createdAt).toLocaleDateString('id-ID')}</span>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <span className="text-[10px] text-gray-400 block uppercase font-bold">Terdaftar</span>
+                  <span className="text-xs font-medium">{new Date(user.createdAt).toLocaleDateString('id-ID')}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setResettingUser(user)}
+                    className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                    title="Reset Password"
+                  >
+                    <KeyRound className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteUser(user.id)}
+                    disabled={deletingUserId === user.id}
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                    title="Hapus User"
+                  >
+                    {deletingUserId === user.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -163,6 +225,55 @@ export default function UserManagement() {
           )}
         </div>
       </div>
+
+      {/* Reset Password Modal */}
+      {resettingUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 border border-gray-100">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <KeyRound className="h-5 w-5 text-amber-500" />
+                Reset Password User
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Masukkan kata sandi baru untuk <strong>{resettingUser.name}</strong> ({resettingUser.email}).
+              </p>
+            </div>
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <Input
+                label="Password Baru"
+                type="password"
+                placeholder="Minimal 6 karakter"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+              <div className="flex justify-end gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setResettingUser(null);
+                    setNewPassword('');
+                  }}
+                  disabled={resettingPassword}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={resettingPassword}
+                  isLoading={resettingPassword}
+                  className="bg-amber-600 hover:bg-amber-700 text-white border-none"
+                >
+                  Simpan Password
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
