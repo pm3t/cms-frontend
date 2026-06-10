@@ -7,6 +7,7 @@ import api from '../../lib/axios';
 export default function SmallGroupDashboard() {
     const [groups, setGroups] = useState<any[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingGroup, setEditingGroup] = useState<any | null>(null);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [type, setType] = useState('CELL_GROUP');
@@ -28,13 +29,20 @@ export default function SmallGroupDashboard() {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/groups', {
-                name, description, type, meetingSchedule, location
-            });
+            if (editingGroup) {
+                await api.put(`/groups/${editingGroup.id}`, {
+                    name, description, type, meetingSchedule, location
+                });
+            } else {
+                await api.post('/groups', {
+                    name, description, type, meetingSchedule, location
+                });
+            }
             setIsModalOpen(false);
+            setEditingGroup(null);
             fetchGroups();
         } catch (err) {
-            alert('Failed to create group');
+            alert(editingGroup ? 'Failed to update group' : 'Failed to create group');
         }
     };
 
@@ -49,11 +57,22 @@ export default function SmallGroupDashboard() {
     };
 
     const openNewModal = () => {
+        setEditingGroup(null);
         setName('');
         setDescription('');
         setType('CELL_GROUP');
         setMeetingSchedule('');
         setLocation('');
+        setIsModalOpen(true);
+    };
+
+    const openEditModal = (group: any) => {
+        setEditingGroup(group);
+        setName(group.name);
+        setDescription(group.description || '');
+        setType(group.type);
+        setMeetingSchedule(group.meetingSchedule || '');
+        setLocation(group.location || '');
         setIsModalOpen(true);
     };
 
@@ -83,7 +102,10 @@ export default function SmallGroupDashboard() {
                                 <h3 className="font-semibold text-gray-900 text-lg">{g.name}</h3>
                             </div>
                             <div className="flex gap-1" onClick={e => e.stopPropagation()}>
-                                <button onClick={() => handleDelete(g.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded">
+                                <button onClick={() => openEditModal(g)} className="p-1.5 text-gray-500 hover:bg-gray-100 rounded" title="Edit Group">
+                                    <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => handleDelete(g.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded" title="Delete Group">
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
@@ -113,8 +135,8 @@ export default function SmallGroupDashboard() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
                         <div className="flex justify-between items-center p-5 border-b border-gray-100">
-                            <h3 className="font-bold text-gray-900">New Group</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:bg-gray-100 p-1.5 rounded-full">✕</button>
+                            <h3 className="font-bold text-gray-900">{editingGroup ? 'Edit Group' : 'New Group'}</h3>
+                            <button onClick={() => { setIsModalOpen(false); setEditingGroup(null); }} className="text-gray-400 hover:bg-gray-100 p-1.5 rounded-full">✕</button>
                         </div>
                         <form onSubmit={handleSave} className="p-5 space-y-4">
                             <div>

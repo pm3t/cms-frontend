@@ -18,7 +18,7 @@ export default function CommunicationDashboard() {
     const [tName, setTName] = useState('');
     const [tSubject, setTSubject] = useState('');
     const [tBody, setTBody] = useState('');
-    const [tChannel, setTChannel] = useState<'EMAIL' | 'SMS' | 'WHATSAPP' | 'PUSH'>('EMAIL');
+    const [tChannel, setTChannel] = useState<'INBOX'>('INBOX');
 
     // Logs State
     const [logs, setLogs] = useState<any[]>([]);
@@ -85,7 +85,7 @@ export default function CommunicationDashboard() {
         setTName('');
         setTSubject('');
         setTBody('');
-        setTChannel('EMAIL');
+        setTChannel('INBOX');
         setIsTemplateModalOpen(true);
     };
 
@@ -172,13 +172,8 @@ export default function CommunicationDashboard() {
                                         <div className="flex justify-between items-start mb-3">
                                             <div>
                                                 <h3 className="font-bold text-gray-900">{t.name}</h3>
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${
-                                                    t.channel === 'EMAIL' ? 'bg-blue-100 text-blue-700' :
-                                                    t.channel === 'SMS' ? 'bg-orange-100 text-orange-700' :
-                                                    t.channel === 'WHATSAPP' ? 'bg-green-100 text-green-700' :
-                                                    'bg-purple-100 text-purple-700'
-                                                }`}>
-                                                    {t.channel}
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter bg-blue-100 text-blue-700">
+                                                    In-App Inbox
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -307,10 +302,7 @@ export default function CommunicationDashboard() {
                                         onChange={e => setTChannel(e.target.value as any)}
                                         className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 bg-gray-50/50"
                                     >
-                                        <option value="EMAIL">Email</option>
-                                        <option value="SMS">SMS</option>
-                                        <option value="WHATSAPP">WhatsApp</option>
-                                        <option value="PUSH">Push Notification</option>
+                                        <option value="INBOX">In-App Inbox</option>
                                     </select>
                                 </div>
                             </div>

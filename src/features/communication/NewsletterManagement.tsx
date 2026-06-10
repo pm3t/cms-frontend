@@ -17,6 +17,7 @@ interface Newsletter {
 export default function NewsletterManagement() {
   const queryClient = useQueryClient();
   const [isAdding, setIsAdding] = useState(false);
+  const [editingNewsletter, setEditingNewsletter] = useState<Newsletter | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -41,6 +42,20 @@ export default function NewsletterManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communication', 'newsletters'] });
       setIsAdding(false);
+      setEditingNewsletter(null);
+      setFormData({ title: '', content: '', pdfUrl: '', coverUrl: '', publishDate: new Date().toISOString().split('T')[0] });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await api.put(`/newsletters/${id}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['communication', 'newsletters'] });
+      setIsAdding(false);
+      setEditingNewsletter(null);
       setFormData({ title: '', content: '', pdfUrl: '', coverUrl: '', publishDate: new Date().toISOString().split('T')[0] });
     }
   });
@@ -56,7 +71,23 @@ export default function NewsletterManagement() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createMutation.mutate(formData);
+    if (editingNewsletter) {
+      updateMutation.mutate({ id: editingNewsletter.id, data: formData });
+    } else {
+      createMutation.mutate(formData);
+    }
+  };
+
+  const handleEdit = (n: Newsletter) => {
+    setEditingNewsletter(n);
+    setFormData({
+      title: n.title,
+      content: n.content || '',
+      pdfUrl: n.pdfUrl || '',
+      coverUrl: n.coverUrl || '',
+      publishDate: n.publishDate.split('T')[0]
+    });
+    setIsAdding(true);
   };
 
   return (
@@ -69,7 +100,22 @@ export default function NewsletterManagement() {
           </h2>
           <p className="text-gray-500 mt-1">Kelola buletin mingguan atau warta jemaat digital.</p>
         </div>
-        <Button onClick={() => setIsAdding(!isAdding)}>
+        <Button onClick={() => {
+          if (isAdding) {
+            setIsAdding(false);
+            setEditingNewsletter(null);
+          } else {
+            setEditingNewsletter(null);
+            setFormData({
+              title: '',
+              content: '',
+              pdfUrl: '',
+              coverUrl: '',
+              publishDate: new Date().toISOString().split('T')[0]
+            });
+            setIsAdding(true);
+          }
+        }}>
           {isAdding ? 'Batal' : (
             <>
               <Plus className="w-4 h-4 mr-2" />
@@ -81,6 +127,7 @@ export default function NewsletterManagement() {
 
       {isAdding && (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-lg animate-in zoom-in-95 duration-200 space-y-4">
+          <h3 className="text-lg font-bold text-gray-900">{editingNewsletter ? 'Edit Buletin' : 'Buletin Baru'}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-700">Judul Buletin</label>
@@ -142,10 +189,10 @@ export default function NewsletterManagement() {
           </div>
 
           <div className="pt-2 flex justify-end gap-3">
-            <Button variant="ghost" type="button" onClick={() => setIsAdding(false)}>Batal</Button>
-            <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Simpan Buletin
+            <Button variant="ghost" type="button" onClick={() => { setIsAdding(false); setEditingNewsletter(null); }}>Batal</Button>
+            <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+              {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {editingNewsletter ? 'Simpan Perubahan' : 'Simpan Buletin'}
             </Button>
           </div>
         </form>
@@ -180,26 +227,34 @@ export default function NewsletterManagement() {
                 <p className="text-sm text-gray-500 line-clamp-2 min-h-[40px]">
                   {n.content || 'Tidak ada ringkasan tersedia.'}
                 </p>
-                <div className="pt-2 flex items-center justify-between border-t border-gray-50">
-                  <div className="flex gap-1">
+                <div className="pt-2 flex items-center justify-between border-t border-gray-100">
+                  <div className="flex gap-2">
                     {n.pdfUrl && (
                       <a href={n.pdfUrl} target="_blank" rel="noreferrer">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <ExternalLink className="w-4 h-4" />
+                        <Button variant="outline" size="sm" className="flex items-center gap-1.5 px-3 py-1.5 h-9 text-xs">
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          Lihat PDF
                         </Button>
                       </a>
                     )}
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <Edit2 className="w-4 h-4" />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-1.5 px-3 py-1.5 h-9 text-xs"
+                      onClick={() => handleEdit(n)}
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      Edit
                     </Button>
                   </div>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 h-9 text-xs text-red-500 hover:text-red-700 hover:bg-red-50"
                     onClick={() => { if(confirm('Hapus buletin?')) deleteMutation.mutate(n.id); }}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Hapus
                   </Button>
                 </div>
               </div>

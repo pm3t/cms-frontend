@@ -9,7 +9,7 @@ interface Template {
   name: string;
   subject: string;
   body: string;
-  channel: 'EMAIL' | 'SMS' | 'WHATSAPP' | 'PUSH';
+  channel: 'INBOX';
 }
 
 export default function BulkMessaging() {
@@ -164,10 +164,8 @@ export default function BulkMessaging() {
             {selectedTemplate ? (
               <div className="space-y-4 relative">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
-                  {selectedTemplate.channel === 'EMAIL' && <Mail className="w-3 h-3" />}
-                  {selectedTemplate.channel === 'SMS' && <Smartphone className="w-3 h-3" />}
-                  {selectedTemplate.channel === 'WHATSAPP' && <MessageSquare className="w-3 h-3" />}
-                  {selectedTemplate.channel} Channel
+                  <MessageSquare className="w-3 h-3" />
+                  In-App Inbox Channel
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Subject:</p>

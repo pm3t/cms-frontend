@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { X, UserPlus } from 'lucide-react';
-import axios from 'axios';
-import { API_BASE_URL } from '../../lib/config';
+import api from '../../lib/axios';
 
 interface AddMemberModalProps {
     isOpen: boolean;
@@ -41,9 +40,7 @@ export default function AddMemberModal({ isOpen, onClose, onSuccess }: AddMember
                 birthDate: formData.birthDate ? new Date(formData.birthDate).toISOString() : null,
                 address: formData.address || null
             };
-            await axios.post(`${API_BASE_URL}/members`, payload, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            await api.post('/members', payload);
             alert('Member added successfully!');
             onSuccess();
             onClose();

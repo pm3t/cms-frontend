@@ -22,6 +22,14 @@ export default function GroupDetail() {
     const [meetingDate, setMeetingDate] = useState('');
     const [meetingTitle, setMeetingTitle] = useState('');
 
+    // Edit Group Modal
+    const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+    const [type, setType] = useState('CELL_GROUP');
+    const [meetingSchedule, setMeetingSchedule] = useState('');
+    const [location, setLocation] = useState('');
+
     useEffect(() => {
         fetchGroup();
         fetchAllMembers();
@@ -86,6 +94,29 @@ export default function GroupDetail() {
         }
     };
 
+    const openEditModal = () => {
+        if (!group) return;
+        setName(group.name);
+        setDescription(group.description || '');
+        setType(group.type);
+        setMeetingSchedule(group.meetingSchedule || '');
+        setLocation(group.location || '');
+        setIsEditGroupOpen(true);
+    };
+
+    const handleUpdateGroup = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await api.put(`/groups/${id}`, {
+                name, description, type, meetingSchedule, location
+            });
+            setIsEditGroupOpen(false);
+            fetchGroup();
+        } catch (err) {
+            alert('Failed to update group');
+        }
+    };
+
     if (!group) return <div>Loading...</div>;
 
     const groupMembers = group.members || [];
@@ -101,7 +132,12 @@ export default function GroupDetail() {
                     <ArrowLeft className="w-5 h-5 text-gray-600" />
                 </button>
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">{group.name}</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        {group.name}
+                        <button onClick={openEditModal} className="p-1 text-gray-400 hover:text-gray-600 rounded" title="Edit Group Details">
+                            <Edit2 className="w-4 h-4" />
+                        </button>
+                    </h2>
                     <p className="text-sm text-gray-500">{group.type.replace('_', ' ')} • {group.location || 'No Location'}</p>
                 </div>
             </div>
@@ -272,6 +308,48 @@ export default function GroupDetail() {
                             </div>
                             <div className="flex justify-end pt-2">
                                 <Button type="submit">Schedule</Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Group Modal */}
+            {isEditGroupOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
+                        <div className="flex justify-between items-center p-5 border-b border-gray-100">
+                            <h3 className="font-bold text-gray-900">Edit Group Details</h3>
+                            <button onClick={() => setIsEditGroupOpen(false)} className="text-gray-400 hover:bg-gray-100 p-1.5 rounded-full">✕</button>
+                        </div>
+                        <form onSubmit={handleUpdateGroup} className="p-5 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                                <select value={type} onChange={e => setType(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                                    <option value="CELL_GROUP">Cell Group</option>
+                                    <option value="FELLOWSHIP">Fellowship</option>
+                                    <option value="COMMISSION">Commission</option>
+                                    <option value="MINISTRY">Ministry</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Meeting Schedule</label>
+                                <input type="text" value={meetingSchedule} onChange={e => setMeetingSchedule(e.target.value)} placeholder="e.g. Every Friday 19:00" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                                <input type="text" value={location} onChange={e => setLocation(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" />
+                            </div>
+                            <div className="flex justify-end pt-2">
+                                <Button type="submit">Save Changes</Button>
                             </div>
                         </form>
                     </div>

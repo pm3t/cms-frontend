@@ -16,6 +16,7 @@ export default function TransactionForm({ isOpen, onClose, onSuccess }: Transact
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('');
     const [description, setDescription] = useState('');
+    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [memberId, setMemberId] = useState('');
     const [projectId, setProjectId] = useState('');
     const [pledgeId, setPledgeId] = useState('');
@@ -24,12 +25,25 @@ export default function TransactionForm({ isOpen, onClose, onSuccess }: Transact
     const [members, setMembers] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
     const [pledges, setPledges] = useState<any[]>([]);
+    const [existingCategories, setExistingCategories] = useState<string[]>([]);
 
     React.useEffect(() => {
         if (isOpen) {
             api.get('/members').then(res => setMembers(res.data));
             api.get('/finance/advanced/projects').then(res => setProjects(res.data));
             api.get('/finance/advanced/pledges').then(res => setPledges(res.data));
+            
+            const currentYear = new Date().getFullYear();
+            api.get('/finance/advanced/budgets', { params: { year: currentYear } })
+                .then(res => {
+                    if (Array.isArray(res.data)) {
+                        const cats = res.data.map((v: any) => v.category);
+                        // Filter unique categories
+                        const uniqueCats = Array.from(new Set(cats));
+                        setExistingCategories(uniqueCats);
+                    }
+                })
+                .catch(err => console.error(err));
         }
     }, [isOpen]);
 
@@ -39,13 +53,17 @@ export default function TransactionForm({ isOpen, onClose, onSuccess }: Transact
         e.preventDefault();
         if (parseFloat(amount) <= 0) return alert('Amount must be greater than 0');
 
+        const finalCategory = type === 'EXPENSE' ? category : (type === 'OFFERING' ? 'Offering' : 'Donation');
+        if (!finalCategory) return alert('Please select a category');
+
         setSubmitting(true);
         try {
             await api.post('/finance', {
                 type,
                 amount: parseFloat(amount),
-                category,
+                category: finalCategory,
                 description,
+                date: new Date(date).toISOString(),
                 memberId: memberId || undefined,
                 projectId: projectId || undefined,
                 pledgeId: pledgeId || undefined
@@ -54,9 +72,11 @@ export default function TransactionForm({ isOpen, onClose, onSuccess }: Transact
             await onSuccess();
             onClose();
             // Reset
+            setDate(new Date().toISOString().split('T')[0]);
             setMemberId('');
             setProjectId('');
             setPledgeId('');
+            setCategory('');
         } catch (error: any) {
             alert('Failed to save transaction: ' + (error.message || 'Unknown error'));
         } finally {
@@ -89,6 +109,17 @@ export default function TransactionForm({ isOpen, onClose, onSuccess }: Transact
                     </div>
 
                     <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Transaction Date</label>
+                        <input
+                            required
+                            type="date"
+                            value={date}
+                            onChange={e => setDate(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                        />
+                    </div>
+
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Amount (Rp)</label>
                         <input
                             required
@@ -102,17 +133,25 @@ export default function TransactionForm({ isOpen, onClose, onSuccess }: Transact
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <input
-                            required
-                            type="text"
-                            value={category}
-                            onChange={e => setCategory(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                            placeholder={type === 'EXPENSE' ? 'e.g. Utility Bills, Salary' : 'e.g. Tithe, Sunday Service'}
-                        />
-                    </div>
+                    {type === 'EXPENSE' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <select
+                                required
+                                value={category}
+                                onChange={e => setCategory(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                            >
+                                <option value="">-- Select Budget Category --</option>
+                                {existingCategories.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                                {existingCategories.length === 0 && (
+                                    <option value="" disabled>No budget categories found. Add them in Budget tab.</option>
+                                )}
+                            </select>
+                        </div>
+                    )}
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>

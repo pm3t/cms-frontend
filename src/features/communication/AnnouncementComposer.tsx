@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/axios';
 import { X, Send } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { API_BASE_URL } from '../../lib/config';
 
-const API = `${API_BASE_URL}/announcements`;
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 interface AnnouncementComposerProps {
     isOpen: boolean;
@@ -40,9 +37,9 @@ export default function AnnouncementComposer({ isOpen, initialData, onClose, onS
         try {
             const payload = { title, content, audience };
             if (initialData) {
-                await axios.put(`${API}/${initialData.id}`, payload, { headers: authHeaders() });
+                await api.put(`/announcements/${initialData.id}`, payload);
             } else {
-                await axios.post(API, payload, { headers: authHeaders() });
+                await api.post('/announcements', payload);
             }
             onSuccess();
             onClose();

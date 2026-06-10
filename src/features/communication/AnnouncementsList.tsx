@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/axios';
 import { Megaphone, Plus, Trash2, Edit } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import AnnouncementComposer from './AnnouncementComposer';
-import { API_BASE_URL } from '../../lib/config';
-
-const API = `${API_BASE_URL}/announcements`;
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 export default function AnnouncementsList() {
     const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -16,7 +12,7 @@ export default function AnnouncementsList() {
 
     const fetchAnnouncements = () => {
         setLoading(true);
-        axios.get(API, { headers: authHeaders() })
+        api.get('/announcements')
             .then(res => setAnnouncements(res.data))
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
@@ -29,7 +25,7 @@ export default function AnnouncementsList() {
     const handleDelete = async (id: string) => {
         if (!confirm('Hapus pengumuman ini?')) return;
         try {
-            await axios.delete(`${API}/${id}`, { headers: authHeaders() });
+            await api.delete(`/announcements/${id}`);
             fetchAnnouncements();
         } catch (err) {
             alert('Gagal menghapus pengumuman');
