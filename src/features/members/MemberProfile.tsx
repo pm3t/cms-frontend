@@ -19,6 +19,10 @@ export default function MemberProfile() {
     // Tab State
     const [activeTab, setActiveTab] = useState<'profile' | 'family' | 'sacraments' | 'skills'>('profile');
     const [loading, setLoading] = useState(true);
+    const [loadingSkills, setLoadingSkills] = useState(false);
+
+    // Feature availability (detected from API responses)
+    const [hasMinistryFeature, setHasMinistryFeature] = useState<boolean | null>(null);
 
     const [sacramentForm, setSacramentForm] = useState({ type: 'BAPTISM', date: '', location: '', pastorName: '' });
     const [newFamilyName, setNewFamilyName] = useState('');
@@ -44,32 +48,62 @@ export default function MemberProfile() {
     const fetchData = async () => {
         if (!id) return;
         try {
-            const [memRes, famRes, skillRes] = await Promise.all([
+            const [memRes, famRes] = await Promise.allSettled([
                 api.get(`/members/${id}`),
                 api.get('/members/families/all'),
-                api.get('/ministry/skills')
             ]);
-            setMember(memRes.data);
+
+            // Member data is critical — fail if it can't be loaded
+            if (memRes.status === 'rejected') throw memRes.reason;
+            setMember(memRes.value.data);
             setEditForm({
-                firstName: memRes.data.firstName || '',
-                lastName: memRes.data.lastName || '',
-                gender: memRes.data.gender || 'M',
-                birthDate: memRes.data.birthDate ? new Date(memRes.data.birthDate).toISOString().split('T')[0] : '',
-                address: memRes.data.address || '',
-                email: memRes.data.email || '',
-                phone: memRes.data.phone || '',
-                status: memRes.data.status || 'ACTIVE',
-                category: memRes.data.category || 'ADULT',
-                isPrivate: memRes.data.isPrivate || false,
+                firstName: memRes.value.data.firstName || '',
+                lastName: memRes.value.data.lastName || '',
+                gender: memRes.value.data.gender || 'M',
+                birthDate: memRes.value.data.birthDate ? new Date(memRes.value.data.birthDate).toISOString().split('T')[0] : '',
+                address: memRes.value.data.address || '',
+                email: memRes.value.data.email || '',
+                phone: memRes.value.data.phone || '',
+                status: memRes.value.data.status || 'ACTIVE',
+                category: memRes.value.data.category || 'ADULT',
+                isPrivate: memRes.value.data.isPrivate || false,
             });
-            setFamilies(famRes.data);
-            setAvailableSkills(skillRes.data);
+
+            // Families — non-critical, default to empty list
+            if (famRes.status === 'fulfilled') setFamilies(famRes.value.data);
+
             setLoading(false);
         } catch (err) {
             console.error(err);
             alert("Failed to load member profile.");
             navigate('/members');
         }
+    };
+
+    // Lazy-load skills only when the Skills tab is opened
+    const fetchSkills = async () => {
+        if (availableSkills.length > 0 || hasMinistryFeature === false) return;
+        setLoadingSkills(true);
+        try {
+            const res = await api.get('/ministry/skills');
+            setAvailableSkills(res.data);
+            setHasMinistryFeature(true);
+        } catch (err: any) {
+            const status = err?.response?.status;
+            if (status === 403) {
+                // Plan doesn't include ministry_management — hide the tab
+                setHasMinistryFeature(false);
+            } else {
+                console.error('[MemberProfile] Failed to load skills:', err.message);
+            }
+        } finally {
+            setLoadingSkills(false);
+        }
+    };
+
+    const handleTabChange = (tab: 'profile' | 'family' | 'sacraments' | 'skills') => {
+        setActiveTab(tab);
+        if (tab === 'skills') fetchSkills();
     };
 
     const handleSaveProfile = async () => {
@@ -266,18 +300,21 @@ export default function MemberProfile() {
 
                 {/* Tabs */}
                 <div className="flex border-t border-gray-100 px-4">
-                    <button onClick={() => setActiveTab('profile')} className={`px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'profile' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
+                    <button onClick={() => handleTabChange('profile')} className={`px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'profile' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
                         Profile Details
                     </button>
-                    <button onClick={() => setActiveTab('family')} className={`px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'family' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
+                    <button onClick={() => handleTabChange('family')} className={`px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'family' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
                         <Users className="w-4 h-4" /> Family
                     </button>
-                    <button onClick={() => setActiveTab('sacraments')} className={`px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'sacraments' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
+                    <button onClick={() => handleTabChange('sacraments')} className={`px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'sacraments' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
                         <BookOpen className="w-4 h-4" /> Sacraments
                     </button>
-                    <button onClick={() => setActiveTab('skills')} className={`px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'skills' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
-                        <ShieldCheck className="w-4 h-4" /> Skills & Talents
-                    </button>
+                    {/* Only show Skills tab if ministry_management is available (not false = unknown or true) */}
+                    {hasMinistryFeature !== false && (
+                        <button onClick={() => handleTabChange('skills')} className={`px-4 py-3 font-medium text-sm flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'skills' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>
+                            <ShieldCheck className="w-4 h-4" /> Skills & Talents
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -567,62 +604,66 @@ export default function MemberProfile() {
                         </div>
                     </div>
 
-                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            {!member.skills || member.skills.length === 0 ? (
-                                <div className="p-6 text-center border-2 border-dashed border-gray-200 rounded-xl text-gray-500">
-                                    No skills recorded yet.
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {member.skills.map((ms: any) => (
-                                        <div key={ms.skill.id} className="flex justify-between items-center p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                                            <div>
-                                                <h4 className="font-bold text-gray-900">{ms.skill.name}</h4>
-                                                <p className="text-xs text-gray-500">Proficiency: {ms.proficiency} / 5</p>
+                    {loadingSkills ? (
+                        <div className="p-10 text-center text-gray-400">Loading skills...</div>
+                    ) : (
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                {!member.skills || member.skills.length === 0 ? (
+                                    <div className="p-6 text-center border-2 border-dashed border-gray-200 rounded-xl text-gray-500">
+                                        No skills recorded yet.
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {member.skills.map((ms: any) => (
+                                            <div key={ms.skill.id} className="flex justify-between items-center p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                                                <div>
+                                                    <h4 className="font-bold text-gray-900">{ms.skill.name}</h4>
+                                                    <p className="text-xs text-gray-500">Proficiency: {ms.proficiency} / 5</p>
+                                                </div>
+                                                <Button variant="ghost" size="sm" onClick={() => handleRemoveSkill(ms.skill.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
                                             </div>
-                                            <Button variant="ghost" size="sm" onClick={() => handleRemoveSkill(ms.skill.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="bg-gray-50 p-5 border border-gray-100 rounded-xl h-fit">
-                            <h4 className="font-semibold text-sm mb-4">Add Skill</h4>
-                            <div className="space-y-3">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Select Skill</label>
-                                    <select
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                                        value={selectedSkillId}
-                                        onChange={e => setSelectedSkillId(e.target.value)}
-                                    >
-                                        <option value="">-- Choose --</option>
-                                        {availableSkills.map(sk => (
-                                            <option key={sk.id} value={sk.id}>{sk.name}</option>
                                         ))}
-                                    </select>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-gray-50 p-5 border border-gray-100 rounded-xl h-fit">
+                                <h4 className="font-semibold text-sm mb-4">Add Skill</h4>
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Select Skill</label>
+                                        <select
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                                            value={selectedSkillId}
+                                            onChange={e => setSelectedSkillId(e.target.value)}
+                                        >
+                                            <option value="">-- Choose --</option>
+                                            {availableSkills.map(sk => (
+                                                <option key={sk.id} value={sk.id}>{sk.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Proficiency Level (1-5)</label>
+                                        <input
+                                            type="range"
+                                            min="1" max="5"
+                                            className="w-full"
+                                            value={proficiency}
+                                            onChange={e => setProficiency(Number(e.target.value))}
+                                        />
+                                        <div className="text-center font-bold text-primary-600 mt-1">{proficiency}</div>
+                                    </div>
+                                    <Button className="w-full mt-4" onClick={handleAddSkill} disabled={!selectedSkillId}>
+                                        <Plus className="w-4 h-4 mr-2" /> Add Skill
+                                    </Button>
                                 </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Proficiency Level (1-5)</label>
-                                    <input 
-                                        type="range" 
-                                        min="1" max="5" 
-                                        className="w-full"
-                                        value={proficiency}
-                                        onChange={e => setProficiency(Number(e.target.value))}
-                                    />
-                                    <div className="text-center font-bold text-primary-600 mt-1">{proficiency}</div>
-                                </div>
-                                <Button className="w-full mt-4" onClick={handleAddSkill} disabled={!selectedSkillId}>
-                                    <Plus className="w-4 h-4 mr-2" /> Add Skill
-                                </Button>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
         </div>

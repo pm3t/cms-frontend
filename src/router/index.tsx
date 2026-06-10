@@ -21,6 +21,7 @@ const PaymentFailedPage = lazy(() => import('../pages/billing/PaymentFailedPage'
 const TenantListPage = lazy(() => import('../pages/super-admin/TenantListPage'));
 const SuperAdminUsersPage = lazy(() => import('../pages/super-admin/SuperAdminUsersPage'));
 const SuperAdminSettingsPage = lazy(() => import('../pages/super-admin/SuperAdminSettingsPage'));
+const SuperAdminBackupPage = lazy(() => import('../pages/super-admin/SuperAdminBackupPage'));
 
 // Dashboard
 const DashboardHome = lazy(() => import('../features/dashboard/DashboardHome'));
@@ -111,6 +112,7 @@ const AppRouter: React.FC = () => {
             <Route path="/super-admin/dashboard" element={<div className="p-4 bg-white rounded-lg shadow">Super Admin Overview</div>} />
             <Route path="/super-admin/tenants" element={<TenantListPage />} />
             <Route path="/super-admin/users" element={<SuperAdminUsersPage />} />
+            <Route path="/super-admin/backup" element={<SuperAdminBackupPage />} />
             <Route path="/super-admin/settings" element={<SuperAdminSettingsPage />} />
           </Route>
         </Route>

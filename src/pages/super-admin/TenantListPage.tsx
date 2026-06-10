@@ -10,7 +10,13 @@ import {
   CheckSquare,
   Square
 } from 'lucide-react';
-import { useTenants, useUpdateTenantStatus, useBulkDeleteTenants } from '../../hooks/useSuperAdmin';
+import { 
+  useTenants, 
+  useUpdateTenantStatus, 
+  useBulkDeleteTenants,
+  useSuperAdminPlans,
+  useUpdateTenantPlan 
+} from '../../hooks/useSuperAdmin';
 import PlanBadge from '../../components/billing/PlanBadge';
 
 const TenantListPage: React.FC = () => {
@@ -19,8 +25,10 @@ const TenantListPage: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
   const { data: tenants, isLoading } = useTenants();
+  const { data: plans } = useSuperAdminPlans();
   const updateStatusMutation = useUpdateTenantStatus();
   const bulkDeleteMutation = useBulkDeleteTenants();
+  const updatePlanMutation = useUpdateTenantPlan();
 
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     const action = currentStatus === 'suspended' ? 'activate' : 'suspend';
@@ -33,6 +41,17 @@ const TenantListPage: React.FC = () => {
         await updateStatusMutation.mutateAsync({ id, action });
       } catch (err) {
         alert('Gagal memperbarui status: ' + (err as Error).message);
+      }
+    }
+  };
+
+  const handlePlanChange = async (id: string, planId: string) => {
+    if (window.confirm('Apakah Anda yakin ingin mengubah paket tenant ini secara langsung tanpa melibatkan invoice/Xendit?')) {
+      try {
+        await updatePlanMutation.mutateAsync({ id, planId });
+        alert('Paket tenant berhasil diperbarui.');
+      } catch (err) {
+        alert('Gagal memperbarui paket: ' + (err as Error).message);
       }
     }
   };
@@ -163,8 +182,19 @@ const TenantListPage: React.FC = () => {
                       <div className="text-[10px] text-gray-400 font-mono">ID: {tenant.id}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
-                        {latestSub && <PlanBadge planName={latestSub.plan.name} />}
+                      <div className="flex flex-col gap-1.5">
+                        <select
+                          value={latestSub?.planId || plans?.find((p: any) => p.name === 'Free')?.id || ''}
+                          onChange={(e) => handlePlanChange(tenant.id, e.target.value)}
+                          disabled={updatePlanMutation.isPending}
+                          className="text-xs font-semibold px-2 py-1.5 rounded-lg bg-gray-50 border border-gray-300 text-gray-700 hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 max-w-[130px]"
+                        >
+                          {plans?.map((plan: any) => (
+                            <option key={plan.id} value={plan.id}>
+                              {plan.name}
+                            </option>
+                          ))}
+                        </select>
                         <span className={`text-[10px] font-black uppercase tracking-wider 
                           ${latestSub?.status === 'active' || latestSub?.status === 'trialing' ? 'text-green-600' : 
                             latestSub?.status === 'suspended' ? 'text-red-600' : 'text-amber-600'}

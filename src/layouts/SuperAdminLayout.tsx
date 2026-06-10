@@ -7,7 +7,8 @@ import {
   LogOut, 
   Menu, 
   Church,
-  Settings
+  Settings,
+  Database
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 
@@ -22,6 +23,7 @@ const SuperAdminLayout: React.FC = () => {
     { name: 'Platform Overview', href: '/super-admin/dashboard', icon: BarChart3 },
     { name: 'Tenants (Gereja)', href: '/super-admin/tenants', icon: Church },
     { name: 'User Management', href: '/super-admin/users', icon: Users },
+    { name: 'Backup Database', href: '/super-admin/backup', icon: Database },
     { name: 'Settings', href: '/super-admin/settings', icon: Settings },
   ];
 

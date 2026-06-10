@@ -47,3 +47,33 @@ export const useBulkDeleteTenants = () => {
     },
   });
 };
+
+/**
+ * Hook to fetch all available plans for superadmin.
+ */
+export const useSuperAdminPlans = () => {
+  return useQuery({
+    queryKey: ['super-admin', 'plans'],
+    queryFn: async () => {
+      const response = await api.get('/super-admin/plans');
+      return response.data;
+    },
+  });
+};
+
+/**
+ * Hook to update a tenant's plan directly.
+ */
+export const useUpdateTenantPlan = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, planId }: { id: string; planId: string }) => {
+      const response = await api.patch(`/super-admin/tenants/${id}/plan`, { planId });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['super-admin', 'tenants'] });
+    },
+  });
+};
