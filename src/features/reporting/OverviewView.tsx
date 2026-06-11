@@ -1,12 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Calendar, Wallet, TrendingUp } from 'lucide-react';
 import { reportingService } from './reportingService';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useChartSize } from './useChartSize';
+
+interface BarData { month: string; income: number; expense: number; }
+
+function SVGBarChart({ data, width, height }: { data: BarData[]; width: number; height: number }) {
+  if (!data || data.length === 0) {
+    return <div className="flex items-center justify-center h-full text-gray-400 text-sm">Belum ada data</div>;
+  }
+  const pad = { top: 16, right: 8, bottom: 36, left: 64 };
+  const w = width - pad.left - pad.right;
+  const h = height - pad.top - pad.bottom;
+  const maxVal = Math.max(...data.flatMap(d => [d.income, d.expense]), 1);
+  const groupW = w / data.length;
+  const barW = Math.min(groupW * 0.35, 28);
+  const gap = barW * 0.4;
+  const fmt = (v: number) => v >= 1_000_000 ? `Rp${(v / 1_000_000).toFixed(0)}M` : `Rp${(v / 1000).toFixed(0)}K`;
+  const ticks = 3;
+
+  return (
+    <svg width={width} height={height}>
+      <g transform={`translate(${pad.left},${pad.top})`}>
+        {Array.from({ length: ticks + 1 }).map((_, i) => {
+          const val = (maxVal / ticks) * (ticks - i);
+          const y = h * (i / ticks);
+          return (
+            <g key={i}>
+              <line x1={0} y1={y} x2={w} y2={y} stroke="#f3f4f6" strokeWidth={1} />
+              <text x={-6} y={y + 4} textAnchor="end" fontSize={9} fill="#9ca3af">{fmt(val)}</text>
+            </g>
+          );
+        })}
+        {data.map((d, i) => {
+          const cx = groupW * i + groupW / 2;
+          const incH = (d.income / maxVal) * h;
+          const expH = (d.expense / maxVal) * h;
+          return (
+            <g key={i}>
+              <rect x={cx - gap / 2 - barW} y={h - incH} width={barW} height={incH} fill="#10b981" rx={2} />
+              <rect x={cx + gap / 2} y={h - expH} width={barW} height={expH} fill="#ef4444" rx={2} />
+              <text x={cx} y={h + 14} textAnchor="middle" fontSize={10} fill="#6b7280">{d.month}</text>
+            </g>
+          );
+        })}
+        <line x1={0} y1={h} x2={w} y2={h} stroke="#e5e7eb" strokeWidth={1} />
+      </g>
+      <g transform={`translate(${pad.left},${height - 10})`}>
+        <rect width={8} height={8} fill="#10b981" rx={2} />
+        <text x={12} y={8} fontSize={9} fill="#6b7280">Pemasukan</text>
+        <rect x={75} width={8} height={8} fill="#ef4444" rx={2} />
+        <text x={87} y={8} fontSize={9} fill="#6b7280">Pengeluaran</text>
+      </g>
+    </svg>
+  );
+}
 
 export default function OverviewView() {
   const [kpis, setKpis] = useState<any>(null);
   const [finStats, setFinStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { ref, width, height } = useChartSize(256);
 
   useEffect(() => {
     Promise.all([
@@ -69,21 +123,11 @@ export default function OverviewView() {
 
       {/* Mini Charts Preview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Financial Trend Preview */}
         {finStats && finStats.trend && (
           <div className="border border-gray-100 rounded-2xl p-6 shadow-sm">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Tren Keuangan 6 Bulan Terakhir</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={finStats.trend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} tickFormatter={(val) => `Rp${(val/1000000).toFixed(0)}M`} />
-                  <Tooltip formatter={(value: number) => `Rp ${value.toLocaleString('id-ID')}`} />
-                  <Bar dataKey="income" name="Pemasukan" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expense" name="Pengeluaran" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div ref={ref} className="h-64 w-full">
+              <SVGBarChart data={finStats.trend} width={width} height={height} />
             </div>
           </div>
         )}

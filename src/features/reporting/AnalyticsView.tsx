@@ -1,11 +1,74 @@
 import React, { useState, useEffect } from 'react';
 import { reportingService } from './reportingService';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { TrendingUp, TrendingDown, Users, HeartHandshake, Wallet } from 'lucide-react';
+import { useChartSize } from './useChartSize';
+
+interface GrowthPoint { month: string; newMembers: number; }
+
+function SVGGrowthChart({ data, width, height }: { data: GrowthPoint[]; width: number; height: number }) {
+  if (!data || data.length === 0) {
+    return <div className="flex items-center justify-center h-full text-gray-400 text-sm">Belum ada data pertumbuhan</div>;
+  }
+
+  const pad = { top: 16, right: 16, bottom: 36, left: 32 };
+  const w = width - pad.left - pad.right;
+  const h = height - pad.top - pad.bottom;
+  const maxVal = Math.max(...data.map(d => d.newMembers), 1);
+  const step = data.length > 1 ? w / (data.length - 1) : w;
+
+  const points = data.map((d, i) => ({
+    x: data.length > 1 ? i * step : w / 2,
+    y: h - (d.newMembers / maxVal) * h,
+    ...d
+  }));
+
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+  return (
+    <svg width={width} height={height}>
+      <defs>
+        <linearGradient id="growthGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <g transform={`translate(${pad.left},${pad.top})`}>
+        {/* Grid */}
+        {[0, 0.25, 0.5, 0.75, 1].map((frac, i) => (
+          <line key={i} x1={0} y1={h * frac} x2={w} y2={h * frac} stroke="#f3f4f6" strokeWidth={1} />
+        ))}
+
+        {/* Area */}
+        <path
+          d={`${pathD} L ${points[points.length - 1].x.toFixed(1)} ${h} L ${points[0].x.toFixed(1)} ${h} Z`}
+          fill="url(#growthGrad)"
+          opacity={0.2}
+        />
+
+        {/* Line */}
+        <path d={pathD} fill="none" stroke="#3b82f6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Dots */}
+        {points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r={4} fill="white" stroke="#3b82f6" strokeWidth={2} />
+        ))}
+
+        {/* X Labels — show only first, middle, and last to avoid clutter */}
+        {points.filter((_, i) => i === 0 || i === Math.floor(points.length / 2) || i === points.length - 1).map((p, i) => (
+          <text key={i} x={p.x} y={h + 16} textAnchor="middle" fontSize={10} fill="#9ca3af">{p.month}</text>
+        ))}
+
+        {/* X Axis */}
+        <line x1={0} y1={h} x2={w} y2={h} stroke="#e5e7eb" strokeWidth={1} />
+      </g>
+    </svg>
+  );
+}
 
 export default function AnalyticsView() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { ref, width, height } = useChartSize(256);
 
   useEffect(() => {
     Promise.all([
@@ -56,16 +119,8 @@ export default function AnalyticsView() {
           </div>
           <p className="text-sm text-gray-500 mb-6">Penambahan jemaat baru per bulan selama 12 bulan terakhir.</p>
           
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data.growth.trend} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Line type="monotone" dataKey="newMembers" name="Jemaat Baru" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-              </LineChart>
-            </ResponsiveContainer>
+          <div ref={ref} className="h-64 w-full">
+            <SVGGrowthChart data={data.growth?.trend || []} width={width} height={height} />
           </div>
         </div>
 
@@ -75,7 +130,7 @@ export default function AnalyticsView() {
           <div className="border border-gray-100 rounded-2xl p-6 shadow-sm bg-gradient-to-br from-indigo-50 to-white">
             <div className="flex items-center gap-2 mb-4">
               <HeartHandshake className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-lg font-bold text-gray-900">Engagement & Partisipasi</h3>
+              <h3 className="text-lg font-bold text-gray-900">Engagement &amp; Partisipasi</h3>
             </div>
             
             <div className="grid grid-cols-2 gap-4">

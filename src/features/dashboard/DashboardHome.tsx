@@ -50,7 +50,7 @@ export default function DashboardHome() {
           api.get('/members'),
           api.get('/finance/summary'),
           api.get('/events'),
-          api.get('/small-groups'),
+          api.get('/groups'),
         ]);
 
         const members = membersRes.status === 'fulfilled' ? membersRes.value.data : [];
@@ -60,7 +60,7 @@ export default function DashboardHome() {
 
         const now = new Date();
         const upcoming = Array.isArray(events)
-          ? events.filter((e: any) => new Date(e.startDate) >= now).length
+          ? events.filter((e: any) => new Date(e.endDate) >= now).length
           : 0;
 
         const recentMembers = Array.isArray(members)
