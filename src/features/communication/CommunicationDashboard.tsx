@@ -3,6 +3,7 @@ import { Mail, Edit2, Trash2, Send, Clock, Plus, X, MessageSquare, BookOpen, Sma
 import { Button } from '../../components/ui/Button';
 import BulkMessaging from './BulkMessaging';
 import NewsletterManagement from './NewsletterManagement';
+import SearchableMemberSelect from '../../components/ui/SearchableMemberSelect';
 
 import api from '../../lib/axios';
 
@@ -24,6 +25,12 @@ export default function CommunicationDashboard() {
     const [logs, setLogs] = useState<any[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
 
+    // Test Send State
+    const [members, setMembers] = useState<any[]>([]);
+    const [isSendTestModalOpen, setIsSendTestModalOpen] = useState(false);
+    const [selectedTestTemplate, setSelectedTestTemplate] = useState<any>(null);
+    const [selectedTestMemberId, setSelectedTestMemberId] = useState<string>('');
+
     useEffect(() => {
         setCurrentPage(1); 
         if (activeTab === 'TEMPLATES') {
@@ -32,6 +39,10 @@ export default function CommunicationDashboard() {
             fetchLogs();
         }
     }, [activeTab]);
+
+    useEffect(() => {
+        fetchMembers();
+    }, []);
 
     const fetchTemplates = () => {
         api.get('/communications/templates')
@@ -42,6 +53,12 @@ export default function CommunicationDashboard() {
     const fetchLogs = () => {
         api.get('/communications/logs')
             .then(res => setLogs(res.data))
+            .catch(console.error);
+    };
+
+    const fetchMembers = () => {
+        api.get('/members')
+            .then(res => setMembers(res.data))
             .catch(console.error);
     };
 
@@ -89,22 +106,31 @@ export default function CommunicationDashboard() {
         setIsTemplateModalOpen(true);
     };
 
-    const handleTestSend = async (t: any) => {
-        const recipient = prompt(`Enter test recipient (${t.channel === 'EMAIL' ? 'email' : 'phone number'}):`);
-        if (!recipient) return;
+    const handleTestSend = (t: any) => {
+        setSelectedTestTemplate(t);
+        setSelectedTestMemberId('');
+        setIsSendTestModalOpen(true);
+    };
+
+    const handleExecuteTestSend = async () => {
+        if (!selectedTestTemplate || !selectedTestMemberId) return;
+
+        const recipientMember = members.find(m => m.id === selectedTestMemberId);
+        const fullName = recipientMember ? `${recipientMember.firstName} ${recipientMember.lastName || ''}`.trim() : 'Test Recipient';
 
         try {
             await api.post('/communications/send', {
-                recipient,
-                subject: t.subject.replace('{{name}}', 'Test Recipient'),
-                body: t.body.replace('{{name}}', 'Test Recipient'),
-                channel: t.channel
+                recipient: selectedTestMemberId,
+                subject: selectedTestTemplate.subject.replace(/\{\{name\}\}/gi, fullName),
+                body: selectedTestTemplate.body.replace(/\{\{name\}\}/gi, fullName),
+                channel: 'INBOX'
             });
 
-            alert(`${t.channel} queued!`);
+            alert(`Test message sent to ${fullName}'s In-App Inbox!`);
+            setIsSendTestModalOpen(false);
             setActiveTab('LOGS');
-        } catch (err) {
-            alert(`Failed to send test ${t.channel}`);
+        } catch (err: any) {
+            alert(`Failed to send test: ` + (err.response?.data?.error || err.message));
         }
     };
 
@@ -322,6 +348,48 @@ export default function CommunicationDashboard() {
                                 </Button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Send Test Modal */}
+            {isSendTestModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-gray-100">
+                        <div className="flex justify-between items-center p-6 border-b border-gray-100">
+                            <h3 className="font-bold text-xl text-gray-900">
+                                Kirim Pesan Uji Coba (In-App Inbox)
+                            </h3>
+                            <button onClick={() => setIsSendTestModalOpen(false)} className="text-gray-400 hover:bg-gray-100 p-2 rounded-full transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-5">
+                            <p className="text-sm text-gray-500 leading-relaxed">
+                                Pilih jemaat penerima pesan uji coba untuk dikirim langsung ke In-App Inbox mereka. Variabel <code>{`{{name}}`}</code> akan otomatis digantikan dengan nama jemaat tersebut.
+                            </p>
+                            <div className="space-y-1.5">
+                                <label className="block text-xs font-bold uppercase text-gray-500 ml-1">Pilih Penerima (Jemaat)</label>
+                                <SearchableMemberSelect
+                                    members={members}
+                                    value={selectedTestMemberId}
+                                    onChange={setSelectedTestMemberId}
+                                    placeholder="Cari dan pilih jemaat..."
+                                    required
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                                <Button variant="ghost" type="button" onClick={() => setIsSendTestModalOpen(false)}>Batal</Button>
+                                <Button 
+                                    type="button"
+                                    onClick={handleExecuteTestSend} 
+                                    disabled={!selectedTestMemberId}
+                                    className="px-6"
+                                >
+                                    Kirim Test
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
