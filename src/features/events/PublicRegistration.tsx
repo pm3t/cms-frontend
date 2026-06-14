@@ -12,6 +12,7 @@ export default function PublicRegistration() {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
+    const [registrationId, setRegistrationId] = useState('');
 
     const [form, setForm] = useState({
         name: '',
@@ -39,7 +40,10 @@ export default function PublicRegistration() {
         setSubmitting(true);
         setErrorMsg('');
         try {
-            await axios.post(`${API_BASE_URL}/events/${id}/register`, form);
+            const res = await axios.post(`${API_BASE_URL}/events/${id}/register`, form);
+            if (res.data?.id) {
+                setRegistrationId(res.data.id);
+            }
             setSuccess(true);
         } catch (error: any) {
             setErrorMsg(error.response?.data?.error || 'Registration failed. The event might be full or closed.');
@@ -78,6 +82,20 @@ export default function PublicRegistration() {
                             <p className="text-gray-600 mb-6">
                                 Thank you for registering. You have been placed on the attendee list (or waitlist if full). We look forward to seeing you.
                             </p>
+                            
+                            {registrationId && (
+                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col items-center justify-center mb-6">
+                                    <p className="text-xs text-gray-500 font-bold mb-2">Tunjukkan QR Code ini kepada petugas check-in:</p>
+                                    <img 
+                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${registrationId}`} 
+                                        alt="Registration QR Code"
+                                        className="w-44 h-44 border-2 border-white rounded shadow-sm"
+                                    />
+                                    <p className="text-[10px] text-gray-400 mt-2 font-mono">{registrationId}</p>
+                                    <p className="text-[10px] text-indigo-600 mt-1 font-medium italic">Silakan screenshot/simpan gambar ini untuk check-in di lokasi.</p>
+                                </div>
+                            )}
+
                             <Link to="/login" className="text-indigo-600 hover:text-indigo-500 font-medium text-sm flex items-center justify-center">
                                 <ArrowLeft className="w-4 h-4 mr-1" />
                                 Return to Dashboard

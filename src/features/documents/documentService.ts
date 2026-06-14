@@ -3,7 +3,7 @@ import api from '../../lib/axios';
 // ─── TypeScript Types ────────────────────────────────────────────────────────
 
 export type DocumentCategory = 'SERMON' | 'TEACHING' | 'WORSHIP' | 'ADMINISTRATIVE' | 'OTHER';
-export type CertificateType = 'BAPTISM' | 'MARRIAGE' | 'CONFIRMATION' | 'MEMBERSHIP' | 'OTHER';
+export type CertificateType = 'BAPTISM' | 'MARRIAGE' | 'CONFIRMATION' | 'MEMBERSHIP' | 'DEDICATION' | 'OTHER';
 
 export interface DocumentVersion {
   id: string;

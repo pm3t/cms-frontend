@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { UserPlus, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import api from '../../lib/axios';
+import eklesiaLogo from '../../assets/eklesia_logo.png';
 
 export default function Register() {
     const [formData, setFormData] = useState({ name: '', email: '', churchName: '', password: '' });
@@ -43,12 +44,9 @@ export default function Register() {
                 {/* Subtle top glare effect */}
                 <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/40 to-transparent pointer-events-none"></div>
 
-                <div className="flex flex-col items-center mb-8 relative z-10">
-                    <div className="bg-gradient-to-br from-primary-400 to-primary-600 p-3.5 rounded-2xl mb-4 shadow-lg shadow-primary-500/20">
-                        <UserPlus className="w-7 h-7 text-white" />
-                    </div>
-                    <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 text-center">Register Church</h2>
-                    <p className="text-gray-500 mt-2 text-center text-sm">Create a new workspace for your congregation.</p>
+                <div className="flex flex-col items-center mb-6 relative z-10">
+                    <img src={eklesiaLogo} alt="Eklesia Logo" className="h-28 w-auto mb-2" />
+                    <p className="text-gray-500 mt-1 text-center text-sm">Create a new workspace for your congregation.</p>
                 </div>
 
                 <form onSubmit={handleRegister} className="space-y-5 relative z-10">

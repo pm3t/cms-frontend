@@ -113,7 +113,8 @@ export default function SacramentRequestsView({ onRefresh }: Props) {
     switch (type) {
       case 'BAPTISM': return 'Baptis Kudus';
       case 'MARRIAGE': return 'Pemberkatan Pernikahan';
-      case 'CONFIRMATION': return 'Sidi / Penyerahan Anak';
+      case 'CONFIRMATION': return 'Sidi / Konfirmasi';
+      case 'DEDICATION': return 'Penyerahan Anak';
       case 'MEMBERSHIP': return 'Surat Pindah / Keanggotaan';
       default: return 'Lainnya';
     }

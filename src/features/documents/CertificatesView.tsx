@@ -9,6 +9,7 @@ const CERT_TYPES: { value: CertificateType; label: string; emoji: string; color:
   { value: 'BAPTISM', label: 'Baptis', emoji: '🕊️', color: 'bg-blue-50 text-blue-700' },
   { value: 'MARRIAGE', label: 'Nikah', emoji: '💍', color: 'bg-pink-50 text-pink-700' },
   { value: 'CONFIRMATION', label: 'Sidi', emoji: '✝️', color: 'bg-purple-50 text-purple-700' },
+  { value: 'DEDICATION', label: 'Penyerahan Anak', emoji: '👶', color: 'bg-teal-50 text-teal-700' },
   { value: 'MEMBERSHIP', label: 'Surat Pindah', emoji: '📜', color: 'bg-amber-50 text-amber-700' },
   { value: 'OTHER', label: 'Lainnya', emoji: '📄', color: 'bg-gray-50 text-gray-700' },
 ];

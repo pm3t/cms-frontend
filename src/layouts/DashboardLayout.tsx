@@ -30,6 +30,7 @@ import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { useSubscription } from '../hooks/useBilling';
 import SubscriptionStatusBanner from '../components/billing/SubscriptionStatusBanner';
 import PlanBadge from '../components/billing/PlanBadge';
+import eklesiaIcon from '../assets/eklesia_icon.png';
 
 const DashboardLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -96,8 +97,8 @@ const DashboardLayout: React.FC = () => {
           <div className="h-full flex flex-col">
             {/* Logo */}
             <div className="flex items-center h-16 px-6 border-b border-gray-200">
-              <Church className="h-8 w-8 text-blue-600" />
-              <span className="ml-3 text-xl font-bold text-gray-900 truncate">Eklesia</span>
+              <img src={eklesiaIcon} alt="Eklesia Logo" className="h-11 w-11 object-contain" />
+              <span className="ml-2.5 text-xl font-bold text-gray-900 tracking-tight">Eklesia</span>
             </div>
 
             {/* Nav Links */}

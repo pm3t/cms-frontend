@@ -7,6 +7,7 @@ const CERT_TYPES: { value: CertificateType; label: string; emoji: string }[] = [
   { value: 'BAPTISM', label: 'Baptis', emoji: '🕊️' },
   { value: 'MARRIAGE', label: 'Nikah', emoji: '💍' },
   { value: 'CONFIRMATION', label: 'Sidi', emoji: '✝️' },
+  { value: 'DEDICATION', label: 'Penyerahan Anak', emoji: '👶' },
   { value: 'MEMBERSHIP', label: 'Surat Pindah', emoji: '📜' },
   { value: 'OTHER', label: 'Lainnya', emoji: '📄' },
 ];

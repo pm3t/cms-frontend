@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Church, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import eklesiaLogo from '../../assets/eklesia_logo.png';
 
 import { useLogin } from '../../hooks/useAuth';
 
@@ -47,12 +48,9 @@ export default function Login() {
 
             <div className="relative w-full max-w-md bg-white/60 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl p-8 z-10">
 
-                <div className="flex flex-col items-center mb-8">
-                    <div className="bg-primary-600 p-3 rounded-2xl mb-4 shadow-lg shadow-primary-500/30">
-                        <Church className="w-8 h-8 text-white" />
-                    </div>
-                    <h2 className="text-3xl font-bold tracking-tight text-gray-900">Welcome back</h2>
-                    <p className="text-gray-500 mt-2 text-center">Sign in to your church dashboard</p>
+                <div className="flex flex-col items-center mb-6">
+                    <img src={eklesiaLogo} alt="Eklesia Logo" className="h-28 w-auto mb-2" />
+                    <p className="text-gray-500 mt-1 text-center">Sign in to your church dashboard</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
