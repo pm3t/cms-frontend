@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, QrCode, UserCheck, Play, StopCircle, X } from 'lucide-react';
+import { Search, QrCode, UserCheck, Play, StopCircle, X, XCircle } from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import api from '../../lib/axios';
 
@@ -11,9 +11,12 @@ export default function CheckInPage() {
     const [search, setSearch] = useState('');
     const [isScanning, setIsScanning] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [successMessage, setSuccessMessage] = useState('');
+    const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+    const lastScannedRef = useRef<string | null>(null);
+    const lastScannedTimeRef = useRef<number>(0);
+    const isProcessingRef = useRef<boolean>(false);
 
     useEffect(() => {
         fetchData();
@@ -43,7 +46,7 @@ export default function CheckInPage() {
 
     const handleCheckIn = async (memberId: string, method: string = 'MANUAL') => {
         if (!selectedSession) {
-            alert("Please select a service or event first!");
+            setStatusMessage({ text: "Please select a service or event first!", type: 'error' });
             return;
         }
         try {
@@ -53,15 +56,23 @@ export default function CheckInPage() {
                 eventId: selectedSession.type === 'EVENT' ? selectedSession.id : undefined,
                 method
             });
-            setSuccessMessage("Check-in successful!");
-            setTimeout(() => setSuccessMessage(''), 3000);
+            setStatusMessage({ text: "Check-in successful!", type: 'success' });
+            setTimeout(() => {
+                setStatusMessage(prev => prev?.text === "Check-in successful!" ? null : prev);
+            }, 3000);
         } catch (err: any) {
-            const errorMsg = err.message;
-            if (errorMsg === 'Member already checked in for this session today') {
-                alert("Jemaat ini sudah melakukan check-in untuk sesi hari ini.");
-            } else {
-                alert(errorMsg || "Gagal melakukan check-in.");
+            console.error(err);
+            const errorMsg = err.response?.data?.error || err.message || "Gagal melakukan check-in.";
+            
+            let displayMsg = errorMsg;
+            if (errorMsg.includes('already checked in')) {
+                displayMsg = "Jemaat ini sudah melakukan check-in untuk sesi hari ini.";
             }
+
+            setStatusMessage({ text: displayMsg, type: 'error' });
+            setTimeout(() => {
+                setStatusMessage(prev => prev?.text === displayMsg ? null : prev);
+            }, 4000);
         }
     };
 
@@ -88,10 +99,26 @@ export default function CheckInPage() {
         }
     };
 
-    const onScanSuccess = (decodedText: string) => {
-        // decodedText is expected to be the member ID or registration ID
-        handleCheckIn(decodedText, 'QR');
-        stopScanner();
+    const onScanSuccess = async (decodedText: string) => {
+        const now = Date.now();
+        // Cooldown: Ignore if it's the exact same code scanned within the last 3.5 seconds
+        if (decodedText === lastScannedRef.current && now - lastScannedTimeRef.current < 3500) {
+            return;
+        }
+
+        if (isProcessingRef.current) {
+            return;
+        }
+
+        lastScannedRef.current = decodedText;
+        lastScannedTimeRef.current = now;
+        isProcessingRef.current = true;
+
+        try {
+            await handleCheckIn(decodedText, 'QR');
+        } finally {
+            isProcessingRef.current = false;
+        }
     };
 
     const onScanFailure = () => {
@@ -234,11 +261,19 @@ export default function CheckInPage() {
                 </div>
             )}
 
-            {successMessage && (
-                <div className="fixed bottom-8 right-8 bg-green-600 text-white px-6 py-3 rounded-xl shadow-lg border border-green-500 flex items-center gap-3 animate-in fade-in slide-in-from-right-4">
-                    <CheckCircle className="w-5 h-5" />
-                    <span className="font-medium text-sm">{successMessage}</span>
-                    <button onClick={() => setSuccessMessage('')}><X className="w-4 h-4 opacity-70" /></button>
+            {statusMessage && (
+                <div className={`fixed bottom-8 right-8 px-6 py-3 rounded-xl shadow-lg border flex items-center gap-3 animate-in fade-in slide-in-from-right-4 z-50 ${
+                    statusMessage.type === 'success' 
+                        ? 'bg-green-600 text-white border-green-500 shadow-green-600/20' 
+                        : 'bg-red-600 text-white border-red-500 shadow-red-600/20'
+                }`}>
+                    {statusMessage.type === 'success' ? (
+                        <CheckCircle className="w-5 h-5" />
+                    ) : (
+                        <XCircle className="w-5 h-5" />
+                    )}
+                    <span className="font-medium text-sm">{statusMessage.text}</span>
+                    <button onClick={() => setStatusMessage(null)}><X className="w-4 h-4 opacity-70" /></button>
                 </div>
             )}
         </div>
