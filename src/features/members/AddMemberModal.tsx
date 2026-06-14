@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { X, UserPlus } from 'lucide-react';
@@ -14,6 +14,7 @@ export default function AddMemberModal({ isOpen, onClose, onSuccess }: AddMember
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
+        referenceNumber: '',
         email: '',
         phone: '',
         gender: 'M',
@@ -22,7 +23,52 @@ export default function AddMemberModal({ isOpen, onClose, onSuccess }: AddMember
         birthDate: '',
         address: ''
     });
+    const [ageRules, setAgeRules] = useState<any[]>([]);
     const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            api.get('/tenant/profile')
+                .then(res => {
+                    if (res.data?.ageGroupRules && Array.isArray(res.data.ageGroupRules)) {
+                        setAgeRules(res.data.ageGroupRules);
+                    }
+                })
+                .catch(err => console.error('Failed to fetch age group rules:', err));
+        }
+    }, [isOpen]);
+
+    const calculateCategory = (birthDateStr: string) => {
+        if (!birthDateStr) return formData.category;
+        const birthDate = new Date(birthDateStr);
+        if (isNaN(birthDate.getTime())) return formData.category;
+
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        const rules = ageRules.length > 0 ? ageRules : [
+            { category: 'CHILDREN', minAge: 0, maxAge: 12, label: 'Anak' },
+            { category: 'YOUTH', minAge: 13, maxAge: 20, label: 'Remaja/Youth' },
+            { category: 'ADULT', minAge: 21, maxAge: 59, label: 'Dewasa' },
+            { category: 'ELDERLY', minAge: 60, maxAge: 150, label: 'Lansia' }
+        ];
+
+        const matched = rules.find((r: any) => age >= r.minAge && age <= r.maxAge);
+        return matched ? matched.category : 'ADULT';
+    };
+
+    const handleBirthDateChange = (dateVal: string) => {
+        const calculatedCat = calculateCategory(dateVal);
+        setFormData(prev => ({
+            ...prev,
+            birthDate: dateVal,
+            category: calculatedCat
+        }));
+    };
 
     if (!isOpen) return null;
 
@@ -38,7 +84,8 @@ export default function AddMemberModal({ isOpen, onClose, onSuccess }: AddMember
             const payload = {
                 ...formData,
                 birthDate: formData.birthDate ? new Date(formData.birthDate).toISOString() : null,
-                address: formData.address || null
+                address: formData.address || null,
+                referenceNumber: formData.referenceNumber || null
             };
             await api.post('/members', payload);
             alert('Member added successfully!');
@@ -89,6 +136,14 @@ export default function AddMemberModal({ isOpen, onClose, onSuccess }: AddMember
 
                         <div className="grid grid-cols-2 gap-5">
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">No. Induk Jemaat (Referensi)</label>
+                                <Input
+                                    placeholder="e.g. NIK-12345"
+                                    value={formData.referenceNumber}
+                                    onChange={e => setFormData({ ...formData, referenceNumber: e.target.value })}
+                                />
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                                 <Input
                                     type="email"
@@ -97,6 +152,9 @@ export default function AddMemberModal({ isOpen, onClose, onSuccess }: AddMember
                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                                 />
                             </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-5">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                                 <Input
@@ -105,9 +163,6 @@ export default function AddMemberModal({ isOpen, onClose, onSuccess }: AddMember
                                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
                                 />
                             </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-5">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
                                 <select
@@ -132,19 +187,6 @@ export default function AddMemberModal({ isOpen, onClose, onSuccess }: AddMember
                                     <option value="GUEST">Guest / Tamu</option>
                                 </select>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                                <select
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
-                                    value={formData.category}
-                                    onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                >
-                                    <option value="ADULT">Dewasa (Adult)</option>
-                                    <option value="CHILDREN">Anak (Children)</option>
-                                    <option value="YOUTH">Remaja (Youth)</option>
-                                    <option value="ELDERLY">Lansia (Elderly)</option>
-                                </select>
-                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-5">
@@ -153,17 +195,35 @@ export default function AddMemberModal({ isOpen, onClose, onSuccess }: AddMember
                                 <Input
                                     type="date"
                                     value={formData.birthDate}
-                                    onChange={e => setFormData({ ...formData, birthDate: e.target.value })}
+                                    onChange={e => handleBirthDateChange(e.target.value)}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                <Input
-                                    placeholder="e.g. 123 Main St"
-                                    value={formData.address}
-                                    onChange={e => setFormData({ ...formData, address: e.target.value })}
-                                />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                <select
+                                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none ${formData.birthDate ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                                    value={formData.category}
+                                    onChange={e => !formData.birthDate && setFormData({ ...formData, category: e.target.value })}
+                                    disabled={!!formData.birthDate}
+                                >
+                                    <option value="ADULT">Dewasa (Adult)</option>
+                                    <option value="CHILDREN">Anak (Children)</option>
+                                    <option value="YOUTH">Remaja (Youth)</option>
+                                    <option value="ELDERLY">Lansia (Elderly)</option>
+                                </select>
+                                {formData.birthDate && (
+                                    <span className="text-[11px] text-blue-600 mt-0.5 block">Kalkulasi otomatis dari Tgl Lahir</span>
+                                )}
                             </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                            <Input
+                                placeholder="e.g. 123 Main St"
+                                value={formData.address}
+                                onChange={e => setFormData({ ...formData, address: e.target.value })}
+                            />
                         </div>
                     </form>
                 </div>

@@ -77,3 +77,29 @@ export const useUpdateTenantPlan = () => {
     },
   });
 };
+
+/**
+ * Hook to fetch revenue summary for superadmin.
+ */
+export const useRevenueSummary = () => {
+  return useQuery({
+    queryKey: ['super-admin', 'revenue'],
+    queryFn: async () => {
+      const response = await api.get('/super-admin/revenue');
+      return response.data;
+    },
+  });
+};
+
+/**
+ * Hook to fetch all invoices across all tenants.
+ */
+export const useSuperAdminInvoices = () => {
+  return useQuery({
+    queryKey: ['super-admin', 'invoices'],
+    queryFn: async () => {
+      const response = await api.get('/super-admin/invoices');
+      return response.data;
+    },
+  });
+};

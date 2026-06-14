@@ -5,6 +5,12 @@ import { useAuthStore } from '../../stores/authStore';
 
 export default function ConfigurationForm() {
     const [formData, setFormData] = useState({ timezone: 'Asia/Jakarta', currency: 'IDR', language: 'id' });
+    const [ageRules, setAgeRules] = useState<any[]>([
+        { category: 'CHILDREN', minAge: 0, maxAge: 12, label: 'Anak' },
+        { category: 'YOUTH', minAge: 13, maxAge: 20, label: 'Remaja/Youth' },
+        { category: 'ADULT', minAge: 21, maxAge: 59, label: 'Dewasa' },
+        { category: 'ELDERLY', minAge: 60, maxAge: 150, label: 'Lansia' }
+    ]);
 
     const user = useAuthStore(state => state.user);
     const tenantId = user?.organization_id || 'global';
@@ -18,13 +24,27 @@ export default function ConfigurationForm() {
                 currency: res.data.currency || 'IDR',
                 language: res.data.language || 'id'
             });
+            if (res.data.ageGroupRules && Array.isArray(res.data.ageGroupRules) && res.data.ageGroupRules.length > 0) {
+                setAgeRules(res.data.ageGroupRules);
+            }
         });
     }, []);
+
+    const handleRuleChange = (idx: number, key: string, value: any) => {
+        setAgeRules(prev => {
+            const copy = [...prev];
+            copy[idx] = { ...copy[idx], [key]: value };
+            return copy;
+        });
+    };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.patch('/tenant/profile', formData);
+            await api.patch('/tenant/profile', {
+                ...formData,
+                ageGroupRules: ageRules
+            });
             // Save local client setting
             localStorage.setItem(`pageSize_${tenantId}`, pageSize);
 
@@ -76,6 +96,44 @@ export default function ConfigurationForm() {
                         <option value="All">All records</option>
                     </select>
                 </div>
+            </div>
+
+            <h3 className="text-xl font-bold text-gray-800 border-b border-gray-100 pb-4 pt-6">Kategori Kelompok Umur</h3>
+            <p className="text-sm text-gray-500">Sesuaikan rentang umur untuk setiap kategori jemaat di gereja Anda. Perubahan akan mempengaruhi penentuan kategori otomatis berdasarkan tanggal lahir.</p>
+            
+            <div className="space-y-4">
+                {ageRules.map((rule, idx) => (
+                    <div key={rule.category} className="grid grid-cols-4 gap-4 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <div className="font-semibold text-gray-700 text-sm">{rule.category}</div>
+                        <div>
+                            <label className="text-[11px] text-gray-500 block mb-0.5">Label (Tampilan)</label>
+                            <input 
+                                type="text"
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary-500"
+                                value={rule.label}
+                                onChange={e => handleRuleChange(idx, 'label', e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[11px] text-gray-500 block mb-0.5">Min Umur</label>
+                            <input 
+                                type="number"
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary-500"
+                                value={rule.minAge}
+                                onChange={e => handleRuleChange(idx, 'minAge', parseInt(e.target.value) || 0)}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[11px] text-gray-500 block mb-0.5">Max Umur</label>
+                            <input 
+                                type="number"
+                                className="w-full bg-white border border-gray-200 rounded px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary-500"
+                                value={rule.maxAge}
+                                onChange={e => handleRuleChange(idx, 'maxAge', parseInt(e.target.value) || 0)}
+                            />
+                        </div>
+                    </div>
+                ))}
             </div>
 
             <div className="pt-4">

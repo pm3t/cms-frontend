@@ -35,6 +35,7 @@ export default function MemberProfile() {
     const [editForm, setEditForm] = useState<any>({
         firstName: '',
         lastName: '',
+        referenceNumber: '',
         gender: 'M',
         birthDate: '',
         address: '',
@@ -44,6 +45,49 @@ export default function MemberProfile() {
         category: 'ADULT',
         isPrivate: false,
     });
+    const [ageRules, setAgeRules] = useState<any[]>([]);
+
+    useEffect(() => {
+        api.get('/tenant/profile')
+            .then(res => {
+                if (res.data?.ageGroupRules && Array.isArray(res.data.ageGroupRules)) {
+                    setAgeRules(res.data.ageGroupRules);
+                }
+            })
+            .catch(err => console.error('Failed to fetch age group rules:', err));
+    }, []);
+
+    const calculateCategory = (birthDateStr: string) => {
+        if (!birthDateStr) return editForm.category;
+        const birthDate = new Date(birthDateStr);
+        if (isNaN(birthDate.getTime())) return editForm.category;
+
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        const rules = ageRules.length > 0 ? ageRules : [
+            { category: 'CHILDREN', minAge: 0, maxAge: 12, label: 'Anak' },
+            { category: 'YOUTH', minAge: 13, maxAge: 20, label: 'Remaja/Youth' },
+            { category: 'ADULT', minAge: 21, maxAge: 59, label: 'Dewasa' },
+            { category: 'ELDERLY', minAge: 60, maxAge: 150, label: 'Lansia' }
+        ];
+
+        const matched = rules.find((r: any) => age >= r.minAge && age <= r.maxAge);
+        return matched ? matched.category : 'ADULT';
+    };
+
+    const handleBirthDateChange = (dateVal: string) => {
+        const calculatedCat = calculateCategory(dateVal);
+        setEditForm((prev: any) => ({
+            ...prev,
+            birthDate: dateVal,
+            category: calculatedCat
+        }));
+    };
 
     const fetchData = async () => {
         if (!id) return;
@@ -59,6 +103,7 @@ export default function MemberProfile() {
             setEditForm({
                 firstName: memRes.value.data.firstName || '',
                 lastName: memRes.value.data.lastName || '',
+                referenceNumber: memRes.value.data.referenceNumber || '',
                 gender: memRes.value.data.gender || 'M',
                 birthDate: memRes.value.data.birthDate ? new Date(memRes.value.data.birthDate).toISOString().split('T')[0] : '',
                 address: memRes.value.data.address || '',
@@ -115,6 +160,7 @@ export default function MemberProfile() {
             const payload = {
                 ...editForm,
                 birthDate: editForm.birthDate ? new Date(editForm.birthDate).toISOString() : null,
+                referenceNumber: editForm.referenceNumber || null
             };
             await api.patch(`/members/${id}`, payload);
             alert('Profile updated successfully!');
@@ -332,6 +378,7 @@ export default function MemberProfile() {
                                     setEditForm({
                                         firstName: member.firstName || '',
                                         lastName: member.lastName || '',
+                                        referenceNumber: member.referenceNumber || '',
                                         gender: member.gender || 'M',
                                         birthDate: member.birthDate ? new Date(member.birthDate).toISOString().split('T')[0] : '',
                                         address: member.address || '',
@@ -367,6 +414,15 @@ export default function MemberProfile() {
                             />
                         </div>
                         <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">No. Induk Jemaat (Referensi)</label>
+                            <Input 
+                                value={isEditing ? editForm.referenceNumber : (member.referenceNumber || '')} 
+                                onChange={e => setEditForm({ ...editForm, referenceNumber: e.target.value })}
+                                readOnly={!isEditing} 
+                                placeholder="e.g. NIK-12345"
+                            />
+                        </div>
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
                             {isEditing ? (
                                 <select
@@ -387,10 +443,33 @@ export default function MemberProfile() {
                                 <Input 
                                     type="date"
                                     value={editForm.birthDate} 
-                                    onChange={e => setEditForm({ ...editForm, birthDate: e.target.value })}
+                                    onChange={e => handleBirthDateChange(e.target.value)}
                                 />
                             ) : (
                                 <Input value={member.birthDate ? new Date(member.birthDate).toLocaleDateString('id-ID') : 'Not specified'} readOnly />
+                            )}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            {isEditing ? (
+                                <div>
+                                    <select
+                                        className={`w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none ${editForm.birthDate ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                                        value={editForm.category}
+                                        onChange={e => !editForm.birthDate && setEditForm({ ...editForm, category: e.target.value })}
+                                        disabled={!!editForm.birthDate}
+                                    >
+                                        <option value="ADULT">Dewasa (Adult)</option>
+                                        <option value="CHILDREN">Anak (Children)</option>
+                                        <option value="YOUTH">Remaja (Youth)</option>
+                                        <option value="ELDERLY">Lansia (Elderly)</option>
+                                    </select>
+                                    {editForm.birthDate && (
+                                        <span className="text-[11px] text-blue-600 mt-0.5 block">Kalkulasi otomatis dari Tgl Lahir</span>
+                                    )}
+                                </div>
+                            ) : (
+                                <Input value={member.category} readOnly />
                             )}
                         </div>
                         <div>
@@ -424,23 +503,6 @@ export default function MemberProfile() {
                                 </select>
                             ) : (
                                 <Input value={member.status} readOnly />
-                            )}
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                            {isEditing ? (
-                                <select
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
-                                    value={editForm.category}
-                                    onChange={e => setEditForm({ ...editForm, category: e.target.value })}
-                                >
-                                    <option value="ADULT">Dewasa (Adult)</option>
-                                    <option value="CHILDREN">Anak (Children)</option>
-                                    <option value="YOUTH">Remaja (Youth)</option>
-                                    <option value="ELDERLY">Lansia (Elderly)</option>
-                                </select>
-                            ) : (
-                                <Input value={member.category} readOnly />
                             )}
                         </div>
                         <div className="col-span-2">
