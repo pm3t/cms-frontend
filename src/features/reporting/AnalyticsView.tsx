@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { reportingService } from './reportingService';
-import { TrendingUp, TrendingDown, Users, HeartHandshake, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, HeartHandshake, Wallet, Smartphone } from 'lucide-react';
 import { useChartSize } from './useChartSize';
 
 interface GrowthPoint { month: string; newMembers: number; }
@@ -167,6 +167,90 @@ export default function AnalyticsView() {
               </div>
             </div>
           </div>
+
+          {/* Mobile App Engagement Analytics */}
+          {data.eng.mobileMetrics && (
+            <div className="border border-gray-100 rounded-2xl p-6 shadow-sm bg-gradient-to-br from-blue-50 to-white space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-lg font-bold text-gray-900">Engagement Aplikasi Mobile</h3>
+                </div>
+                <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                  {data.eng.mobileMetrics.totalActiveMobile30d} Aktif (30 Hari)
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mb-2">
+                <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm text-center">
+                  <p className="text-2xl font-extrabold text-blue-600">{data.eng.mobileMetrics.totalRegisteredMobile}</p>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase">Jemaat Terdaftar</p>
+                </div>
+                <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm text-center">
+                  <p className="text-2xl font-extrabold text-blue-600">
+                    {data.eng.totalActiveMembers > 0 ? Math.round((data.eng.mobileMetrics.totalRegisteredMobile / data.eng.totalActiveMembers) * 100) : 0}%
+                  </p>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase">Tingkat Adopsi</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-2 border-t border-gray-100">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide">Pola Adopsi & Keaktifan per Demografi</h4>
+                {[
+                  { key: 'YOUTH', label: 'Remaja / Pemuda' },
+                  { key: 'ADULT', label: 'Dewasa' },
+                  { key: 'ELDERLY', label: 'Lansia' },
+                  { key: 'CHILDREN', label: 'Anak-anak' }
+                ].map(cat => {
+                  const total = data.eng.mobileMetrics.totalPerCategory[cat.key] || 0;
+                  const registered = data.eng.mobileMetrics.registeredPerCategory[cat.key] || 0;
+                  const active = data.eng.mobileMetrics.activeCountPerCategory[cat.key] || 0;
+                  const adoptionRate = total > 0 ? Math.round((registered / total) * 100) : 0;
+                  const activeRateOfRegistered = registered > 0 ? Math.round((active / registered) * 100) : 0;
+
+                  return (
+                    <div key={cat.key} className="space-y-1">
+                      <div className="flex justify-between text-xs font-bold text-gray-700">
+                        <span>{cat.label}</span>
+                        <span className="text-gray-500">
+                          {registered}/{total} Terdaftar ({adoptionRate}%) • {active} Aktif ({activeRateOfRegistered}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200/70 h-2.5 rounded-full overflow-hidden flex">
+                        {/* Active part in indigo */}
+                        <div 
+                          className="bg-indigo-600 h-full rounded-l-full" 
+                          style={{ width: `${total > 0 ? (active / total) * 100 : 0}%` }}
+                          title={`${active} jemaat aktif dalam 30 hari terakhir`}
+                        />
+                        {/* Registered but inactive part in light blue */}
+                        <div 
+                          className="bg-sky-400 h-full" 
+                          style={{ width: `${total > 0 ? ((registered - active) / total) * 100 : 0}%` }}
+                          title={`${registered - active} jemaat terdaftar namun tidak aktif 30 hari terakhir`}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-4 text-[10px] text-gray-500 pt-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 bg-indigo-600 rounded-sm"></span>
+                  <span>Aktif (30 Hari)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 bg-sky-400 rounded-sm"></span>
+                  <span>Terdaftar (Inaktif)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 bg-gray-200/70 rounded-sm"></span>
+                  <span>Belum Terdaftar</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
