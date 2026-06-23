@@ -50,6 +50,7 @@ const FacilityDashboard = lazy(() => import('../features/facility/FacilityDashbo
 const ReportingDashboard = lazy(() => import('../features/reporting/ReportingDashboard'));
 const DigitalDashboard = lazy(() => import('../features/digital/DigitalDashboard'));
 const SettingsLayout = lazy(() => import('../features/settings/SettingsLayout'));
+const ChurchWebsite = lazy(() => import('../features/digital/ChurchWebsite'));
 // --- END REAL FEATURE MODULES ---
 
 // Placeholder components for remaining routes
@@ -65,6 +66,8 @@ const AppRouter: React.FC = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/give/:churchId" element={<DonationPortal />} />
         <Route path="/register-event/:id" element={<PublicRegistration />} />
+        <Route path="/website/:tenantId" element={<ChurchWebsite />} />
+        <Route path="/site/:tenantId" element={<ChurchWebsite />} />
         
         {/* Protected Dashboard (Church Admin) */}
         <Route element={<ProtectedRoute />}>

@@ -3,15 +3,17 @@ import ChurchProfileForm from './ChurchProfileForm';
 import ConfigurationForm from './ConfigurationForm';
 import BrandingForm from './BrandingForm';
 import BranchManager from './BranchManager';
+import WebsiteSetupForm from './WebsiteSetupForm';
 
 export default function SettingsLayout() {
-    const [activeTab, setActiveTab] = useState<'profile' | 'config' | 'branch' | 'branding'>('profile');
+    const [activeTab, setActiveTab] = useState<'profile' | 'config' | 'branch' | 'branding' | 'website'>('profile');
 
     const tabs = [
         { id: 'profile', name: 'Church Profile' },
         { id: 'config', name: 'Preferences' },
         { id: 'branch', name: 'Branches' },
-        { id: 'branding', name: 'Branding' }
+        { id: 'branding', name: 'Branding' },
+        { id: 'website', name: 'Website Setup' }
     ] as const;
 
     return (
@@ -48,6 +50,7 @@ export default function SettingsLayout() {
                 {activeTab === 'config' && <ConfigurationForm />}
                 {activeTab === 'branch' && <BranchManager />}
                 {activeTab === 'branding' && <BrandingForm />}
+                {activeTab === 'website' && <WebsiteSetupForm />}
             </div>
 
         </div>

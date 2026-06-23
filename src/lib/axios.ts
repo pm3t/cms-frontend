@@ -30,9 +30,11 @@ api.interceptors.response.use(
 
     if (response) {
       // 401: Unauthorized -> Logout and Redirect
-      if (response.status === 401) {
+      if (response.status === 401 && !error.config?.url?.includes('/auth/login') && !error.config?.url?.includes('/public/')) {
         useAuthStore.getState().clearAuth();
-        window.location.href = '/login';
+        if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+        }
       }
 
       // 403: Forbidden -> Throw with specific message
