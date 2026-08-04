@@ -20,12 +20,60 @@ export default function CheckInPage() {
 
     useEffect(() => {
         fetchData();
+    }, []);
+
+    useEffect(() => {
+        let scanner: Html5QrcodeScanner | null = null;
+        
+        if (isScanning) {
+            const initScanner = () => {
+                try {
+                    const element = document.getElementById("reader");
+                    if (!element) {
+                        // DOM element not ready yet, check again next tick
+                        setTimeout(initScanner, 50);
+                        return;
+                    }
+                    
+                    scanner = new Html5QrcodeScanner(
+                        "reader",
+                        { 
+                            fps: 10, 
+                            qrbox: { width: 250, height: 250 },
+                            rememberLastUsedCamera: true,
+                            aspectRatio: 1.0
+                        },
+                        /* verbose= */ false
+                    );
+                    
+                    scanner.render(onScanSuccess, onScanFailure);
+                    scannerRef.current = scanner;
+                } catch (err: any) {
+                    console.error("Scanner initialization failed:", err);
+                    setStatusMessage({ 
+                        text: `Gagal mengakses kamera: ${err.message || err}. Pastikan izin kamera aktif dan menggunakan koneksi aman (HTTPS/localhost).`, 
+                        type: 'error' 
+                    });
+                    setIsScanning(false);
+                }
+            };
+            
+            initScanner();
+        } else {
+            if (scannerRef.current) {
+                scannerRef.current.clear().then(() => {
+                    scannerRef.current = null;
+                }).catch(console.error);
+            }
+        }
+
         return () => {
             if (scannerRef.current) {
                 scannerRef.current.clear().catch(console.error);
+                scannerRef.current = null;
             }
         };
-    }, []);
+    }, [isScanning]);
 
     const fetchData = async () => {
         try {
@@ -78,25 +126,10 @@ export default function CheckInPage() {
 
     const startScanner = () => {
         setIsScanning(true);
-        setTimeout(() => {
-            scannerRef.current = new Html5QrcodeScanner(
-                "reader",
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                false
-            );
-            scannerRef.current.render(onScanSuccess, onScanFailure);
-        }, 100);
     };
 
     const stopScanner = () => {
-        if (scannerRef.current) {
-            scannerRef.current.clear().then(() => {
-                setIsScanning(false);
-                scannerRef.current = null;
-            }).catch(console.error);
-        } else {
-            setIsScanning(false);
-        }
+        setIsScanning(false);
     };
 
     const onScanSuccess = async (decodedText: string) => {
