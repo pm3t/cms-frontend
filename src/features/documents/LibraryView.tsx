@@ -57,11 +57,11 @@ export default function LibraryView({ documents, onRefresh }: Props) {
 
     if (ft.includes('pdf')) {
       type = 'pdf';
-    } else if (ft.startsWith('audio') || url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.m4a')) {
+    } else if (ft.startsWith('audio') || url.endsWith('.mp3') || url.endsWith('.wav') || url.endsWith('.m4a') || url.endsWith('.aac') || url.endsWith('.ogg') || url.endsWith('.flac')) {
       type = 'audio';
-    } else if (ft.startsWith('video') || url.endsWith('.mp4') || url.endsWith('.webm')) {
+    } else if (ft.startsWith('video') || url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.mkv') || url.endsWith('.mov') || url.endsWith('.avi') || url.endsWith('.wmv') || url.endsWith('.3gp')) {
       type = 'video';
-    } else if (ft.startsWith('image') || url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') || url.endsWith('.gif')) {
+    } else if (ft.startsWith('image') || url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png') || url.endsWith('.gif') || url.endsWith('.webp')) {
       type = 'image';
     }
 
@@ -82,14 +82,20 @@ export default function LibraryView({ documents, onRefresh }: Props) {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const file = fileRef.current?.files?.[0];
+    if (file && file.size > 50 * 1024 * 1024) {
+      alert('Ukuran file terlalu besar. Maksimal 50 MB.');
+      return;
+    }
     setSaving(true);
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
-      if (fileRef.current?.files?.[0]) fd.append('file', fileRef.current.files[0]);
+      if (file) fd.append('file', file);
       await documentService.createDocument(fd);
       setShowModal(false);
       setForm({ title: '', description: '', category: 'SERMON', speaker: '', date: '', tags: '', isPublic: false });
+      if (fileRef.current) fileRef.current.value = '';
       onRefresh();
     } catch (err: any) {
       alert('Gagal menyimpan: ' + err.message);
@@ -98,15 +104,21 @@ export default function LibraryView({ documents, onRefresh }: Props) {
 
   const handleUploadVersion = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!showVersionModal || !versionFileRef.current?.files?.[0]) return;
+    const file = versionFileRef.current?.files?.[0];
+    if (!showVersionModal || !file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      alert('Ukuran file terlalu besar. Maksimal 50 MB.');
+      return;
+    }
     setSaving(true);
     try {
       const fd = new FormData();
-      fd.append('file', versionFileRef.current.files[0]);
+      fd.append('file', file);
       if (versionNotes) fd.append('notes', versionNotes);
       await documentService.uploadVersion(showVersionModal.id, fd);
       setShowVersionModal(null);
       setVersionNotes('');
+      if (versionFileRef.current) versionFileRef.current.value = '';
       onRefresh();
     } catch (err: any) {
       alert('Gagal upload: ' + err.message);
@@ -255,7 +267,7 @@ export default function LibraryView({ documents, onRefresh }: Props) {
               </div>
               <div>
                 <label className="text-sm font-bold text-gray-700 block mb-1">Upload File (PDF, Audio, Video — maks 50 MB)</label>
-                <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.mp3,.mp4,.webm,.jpg,.png" className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100" />
+                <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.mp3,.wav,.m4a,.aac,.ogg,.flac,.mp4,.mkv,.webm,.avi,.mov,.wmv,.3gp,.flv,.jpg,.jpeg,.png,.webp,.gif" className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100" />
               </div>
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                 <input id="pub" type="checkbox" checked={form.isPublic} onChange={e => setForm(f => ({ ...f, isPublic: e.target.checked }))} className="w-4 h-4 accent-blue-600" />
@@ -286,7 +298,7 @@ export default function LibraryView({ documents, onRefresh }: Props) {
             <form onSubmit={handleUploadVersion} className="p-6 space-y-4">
               <div>
                 <label className="text-sm font-bold text-gray-700 block mb-1">File Baru *</label>
-                <input ref={versionFileRef} type="file" required accept=".pdf,.doc,.docx,.ppt,.pptx,.mp3,.mp4,.webm,.jpg,.png" className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-600" />
+                <input ref={versionFileRef} type="file" required accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.mp3,.wav,.m4a,.aac,.ogg,.flac,.mp4,.mkv,.webm,.avi,.mov,.wmv,.3gp,.flv,.jpg,.jpeg,.png,.webp,.gif" className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-600" />
               </div>
               <div>
                 <label className="text-sm font-bold text-gray-700 block mb-1">Catatan Perubahan</label>
