@@ -45,6 +45,7 @@ const MeetingDetail = lazy(() => import('../features/smallGroups/MeetingDetail')
 const ServiceManager = lazy(() => import('../features/attendance/ServiceManager'));
 const CheckInPage = lazy(() => import('../features/attendance/CheckInPage'));
 const PastoralDashboard = lazy(() => import('../features/pastoral/PastoralDashboard'));
+const AbsenteeFollowupReport = lazy(() => import('../features/pastoral/AbsenteeFollowupReport'));
 const DocumentDashboard = lazy(() => import('../features/documents/DocumentDashboard'));
 const FacilityDashboard = lazy(() => import('../features/facility/FacilityDashboard'));
 const ReportingDashboard = lazy(() => import('../features/reporting/ReportingDashboard'));
@@ -84,6 +85,8 @@ const AppRouter: React.FC = () => {
             <Route path="/attendance" element={<AttendanceDashboard />} />
             <Route path="/attendance/services" element={<ServiceManager />} />
             <Route path="/attendance/check-in" element={<CheckInPage />} />
+            <Route path="/attendance/alerts" element={<AbsenteeFollowupReport />} />
+            <Route path="/reports/pastoral-followup" element={<AbsenteeFollowupReport />} />
             <Route path="/events" element={<EventDashboard />} />
             <Route path="/events/:id" element={<EventDetails />} />
             <Route path="/communication" element={<CommunicationDashboard />} />

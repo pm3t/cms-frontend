@@ -6,8 +6,10 @@ import MembershipReport from './MembershipReport';
 import AttendanceReport from './AttendanceReport';
 import FinancialReport from './FinancialReport';
 import CustomReportBuilder from './CustomReportBuilder';
+import AbsenteeFollowupReport from '../pastoral/AbsenteeFollowupReport';
+import { HeartHandshake } from 'lucide-react';
 
-type TabId = 'OVERVIEW' | 'ANALYTICS' | 'MEMBERSHIP' | 'ATTENDANCE' | 'FINANCE' | 'CUSTOM';
+type TabId = 'OVERVIEW' | 'ANALYTICS' | 'MEMBERSHIP' | 'ATTENDANCE' | 'PASTORAL' | 'FINANCE' | 'CUSTOM';
 
 export default function ReportingDashboard() {
   const [tab, setTab] = useState<TabId>('OVERVIEW');
@@ -17,6 +19,7 @@ export default function ReportingDashboard() {
     { id: 'ANALYTICS', name: 'Analitik Lanjut', icon: Activity },
     { id: 'MEMBERSHIP', name: 'Jemaat', icon: BarChartIcon },
     { id: 'ATTENDANCE', name: 'Kehadiran', icon: LineChart },
+    { id: 'PASTORAL', name: 'Follow-up Jemaat', icon: HeartHandshake },
     { id: 'FINANCE', name: 'Keuangan', icon: PieChart },
     { id: 'CUSTOM', name: 'Custom Report', icon: Settings2 },
   ];
@@ -73,6 +76,7 @@ export default function ReportingDashboard() {
         {tab === 'ANALYTICS' && <AnalyticsView />}
         {tab === 'MEMBERSHIP' && <MembershipReport />}
         {tab === 'ATTENDANCE' && <AttendanceReport />}
+        {tab === 'PASTORAL' && <AbsenteeFollowupReport />}
         {tab === 'FINANCE' && <FinancialReport />}
         {tab === 'CUSTOM' && <CustomReportBuilder />}
       </div>

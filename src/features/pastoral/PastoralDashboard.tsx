@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   HeartHandshake, 
   ShieldCheck, 
@@ -23,7 +24,8 @@ import {
   MapPin,
   FileText,
   Pencil,
-  ChevronDown
+  ChevronDown,
+  UserX
 } from 'lucide-react';
 import api from '../../lib/axios';
 import { pastoralService } from './pastoralService';
@@ -108,12 +110,21 @@ export default function PastoralDashboard() {
               Kelola pelayanan jemaat, kunjungan, bimbingan konseling rahasia, sistem pokok doa, pendampingan kelompok kasih, serta penanganan krisis darurat.
             </p>
           </div>
-          <button 
-            onClick={() => fetchData()}
-            className="px-4 py-2 bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white font-semibold text-sm rounded-xl backdrop-blur-md border border-white/20 flex items-center gap-2"
-          >
-            Refresh Data
-          </button>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/reports/pastoral-followup"
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 active:scale-95 transition-all text-white font-semibold text-sm rounded-xl shadow flex items-center gap-2"
+            >
+              <UserX className="w-4 h-4" />
+              Laporan Jarang Hadir
+            </Link>
+            <button 
+              onClick={() => fetchData()}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 active:scale-95 transition-all text-white font-semibold text-sm rounded-xl backdrop-blur-md border border-white/20 flex items-center gap-2"
+            >
+              Refresh Data
+            </button>
+          </div>
         </div>
       </div>
 
