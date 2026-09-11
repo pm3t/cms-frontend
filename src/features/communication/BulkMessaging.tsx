@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/axios';
-import { Send, Users, MessageSquare, Mail, Smartphone, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Send, Users, MessageSquare, Mail, Smartphone, Loader2, CheckCircle2, AlertCircle, UserX } from 'lucide-react';
 
 interface Template {
   id: string;
@@ -92,6 +92,7 @@ export default function BulkMessaging() {
             <div className="grid grid-cols-2 gap-3">
               {[
                 { id: 'ALL', label: 'Semua Anggota', icon: Users },
+                { id: 'ABSENTEES', label: 'Jemaat Jarang Hadir (>21 Hari)', icon: UserX },
                 { id: 'ADULT', label: 'Jemaat Dewasa', icon: Users },
                 { id: 'YOUTH', label: 'Pemuda/Remaja', icon: Users },
                 { id: 'LEADERS', label: 'Pengurus/Pelayan', icon: Users },

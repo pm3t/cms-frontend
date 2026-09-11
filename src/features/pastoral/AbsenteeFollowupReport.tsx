@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, UserX, AlertTriangle, MessageCircle, Calendar, 
   Search, Filter, Download, Plus, CheckCircle, Clock, 
-  Phone, Mail, MapPin, X, ArrowLeft, RefreshCw, HeartHandshake
+  Phone, Mail, MapPin, X, ArrowLeft, RefreshCw, HeartHandshake,
+  Send, Inbox, CheckSquare, Square, Sparkles
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../lib/axios';
@@ -30,30 +31,51 @@ interface AbsenteeMember {
   } | null;
 }
 
+interface CommTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  body: string;
+  channel: string;
+}
+
 export default function AbsenteeFollowupReport() {
   const [absentees, setAbsentees] = useState<AbsenteeMember[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<CommTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // Selection State for Bulk Messaging
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
   // Filters
   const [daysFilter, setDaysFilter] = useState<number>(21);
   const [groupFilter, setGroupFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Modal State for Pastoral Follow-up / Visitation
+  // Modal State for Manual Follow-up / Visitation
   const [selectedMember, setSelectedMember] = useState<AbsenteeMember | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [formType, setFormType] = useState('HOME');
+  const [formType, setFormType] = useState('PHONE');
   const [formStatus, setFormStatus] = useState('COMPLETED');
   const [formVisitor, setFormVisitor] = useState('');
   const [formPurpose, setFormPurpose] = useState('Follow-up Ketidakhadiran');
   const [formNotes, setFormNotes] = useState('');
 
+  // Modal State for Bulk In-App Message
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [bulkTemplateId, setBulkTemplateId] = useState<string>('');
+  const [bulkSubject, setBulkSubject] = useState<string>('');
+  const [bulkBody, setBulkBody] = useState<string>('');
+  const [bulkSending, setBulkSending] = useState<boolean>(false);
+  const [bulkTargetMode, setBulkTargetMode] = useState<'SELECTED' | 'ALL_ABSENTEES'>('SELECTED');
+
   useEffect(() => {
     fetchData();
     fetchGroups();
+    fetchTemplates();
   }, [daysFilter, groupFilter, statusFilter]);
 
   const fetchData = async () => {
@@ -66,6 +88,7 @@ export default function AbsenteeFollowupReport() {
 
       const res = await api.get('/attendance/alerts/absentees', { params });
       setAbsentees(res.data || []);
+      setSelectedIds([]); // Reset selection on fresh data
     } catch (err) {
       console.error("Gagal mengambil data jemaat absen", err);
     } finally {
@@ -82,11 +105,38 @@ export default function AbsenteeFollowupReport() {
     }
   };
 
+  const fetchTemplates = async () => {
+    try {
+      const res = await api.get('/communications/templates');
+      setTemplates(res.data || []);
+    } catch (err) {
+      console.error("Gagal mengambil template komunikasi", err);
+    }
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     fetchData();
   };
 
+  // Selection Handlers
+  const handleSelectAll = () => {
+    if (selectedIds.length === absentees.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(absentees.map(a => a.id));
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(i => i !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  // Manual Follow-up Modal
   const openFollowupModal = (member: AbsenteeMember) => {
     setSelectedMember(member);
     setFormVisitor('');
@@ -122,6 +172,7 @@ export default function AbsenteeFollowupReport() {
     }
   };
 
+  // WhatsApp Click
   const handleWhatsAppClick = (member: AbsenteeMember) => {
     if (!member.phone) {
       alert('Nomor HP jemaat ini belum terdaftar.');
@@ -137,6 +188,73 @@ export default function AbsenteeFollowupReport() {
     );
 
     window.open(`https://wa.me/${formattedPhone}?text=${message}`, '_blank');
+  };
+
+  // Bulk In-App Message Handlers
+  const openBulkModal = (mode: 'SELECTED' | 'ALL_ABSENTEES' = 'SELECTED', singleMember?: AbsenteeMember) => {
+    if (singleMember) {
+      setSelectedIds([singleMember.id]);
+      setBulkTargetMode('SELECTED');
+    } else {
+      setBulkTargetMode(mode);
+    }
+
+    // Default template selection if templates exist
+    if (templates.length > 0) {
+      setBulkTemplateId(templates[0].id);
+      setBulkSubject(templates[0].subject);
+      setBulkBody(templates[0].body);
+    } else {
+      setBulkTemplateId('');
+      setBulkSubject('Shalom {{name}}, kami merindukan persekutuan bersamamu');
+      setBulkBody('Shalom {{name}}, semoga minggu ini berjalan dengan penuh sukacita dan damai sejahtera. Kami dari tim penggembalaan gereja sangat merindukan persekutuan bersama {{name}}. Sampai jumpa di ibadah minggu ini ya! 🙏');
+    }
+
+    setIsBulkModalOpen(true);
+  };
+
+  const handleTemplateChange = (templateId: string) => {
+    setBulkTemplateId(templateId);
+    const tmpl = templates.find(t => t.id === templateId);
+    if (tmpl) {
+      setBulkSubject(tmpl.subject);
+      setBulkBody(tmpl.body);
+    }
+  };
+
+  const handleSendBulkInApp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bulkSubject || !bulkBody) {
+      alert('Judul dan isi pesan wajib diisi');
+      return;
+    }
+
+    const targetIds = bulkTargetMode === 'SELECTED' ? selectedIds : absentees.map(a => a.id);
+    if (bulkTargetMode === 'SELECTED' && targetIds.length === 0) {
+      alert('Pilih setidaknya satu jemaat untuk dikirimkan pesan.');
+      return;
+    }
+
+    setBulkSending(true);
+    try {
+      const res = await api.post('/communications/send-bulk-absentees', {
+        memberIds: bulkTargetMode === 'SELECTED' ? targetIds : undefined,
+        templateId: bulkTemplateId || undefined,
+        subject: bulkSubject,
+        body: bulkBody,
+        visitorName: 'Tim Pastoral (In-App Message)'
+      });
+
+      alert(`Berhasil mengirimkan pesan In-App ke ${res.data.sentCount || targetIds.length} jemaat. Status follow-up otomatis diperbarui!`);
+      setIsBulkModalOpen(false);
+      setSelectedIds([]);
+      fetchData();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data?.error || 'Gagal mengirim pesan massal In-App');
+    } finally {
+      setBulkSending(false);
+    }
   };
 
   const exportToCSV = () => {
@@ -188,11 +306,20 @@ export default function AbsenteeFollowupReport() {
             Laporan Follow-up Jemaat Jarang Hadir
           </h2>
           <p className="text-sm text-gray-500">
-            Identifikasi jemaat pasif/absen untuk memberikan perhatian pastoral & pendampingan
+            Identifikasi jemaat pasif/absen untuk memberikan perhatian pastoral via In-App Message & WhatsApp
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => openBulkModal('ALL_ABSENTEES')}
+            className="px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-colors"
+            title="Kirim pesan In-App ke semua jemaat jarang hadir"
+          >
+            <Send className="w-4 h-4" />
+            Kirim In-App Massal Semua ({totalAbsentees})
+          </button>
+
           <button
             onClick={fetchData}
             className="p-2.5 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 shadow-sm"
@@ -200,6 +327,7 @@ export default function AbsenteeFollowupReport() {
           >
             <RefreshCw className="w-4 h-4" />
           </button>
+          
           <button
             onClick={exportToCSV}
             className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-colors"
@@ -327,6 +455,34 @@ export default function AbsenteeFollowupReport() {
         </div>
       </div>
 
+      {/* Floating Bulk Action Bar (When selected) */}
+      {selectedIds.length > 0 && (
+        <div className="bg-indigo-900 text-white p-4 rounded-xl shadow-lg flex items-center justify-between animate-in fade-in slide-in-from-bottom-2">
+          <div className="flex items-center gap-3">
+            <span className="bg-indigo-800 text-indigo-200 px-3 py-1 rounded-full text-xs font-bold">
+              {selectedIds.length} Jemaat Terpilih
+            </span>
+            <span className="text-sm font-medium">Pilihan tindak lanjut massal:</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => openBulkModal('SELECTED')}
+              className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-semibold flex items-center gap-2 shadow transition-colors"
+            >
+              <Inbox className="w-4 h-4" />
+              Kirim In-App Message ({selectedIds.length})
+            </button>
+            <button
+              onClick={() => setSelectedIds([])}
+              className="p-2 text-indigo-300 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main Table */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {loading ? (
@@ -345,6 +501,19 @@ export default function AbsenteeFollowupReport() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase font-semibold text-gray-500 tracking-wider">
+                  <th className="px-4 py-4 w-10">
+                    <button
+                      type="button"
+                      onClick={handleSelectAll}
+                      className="text-gray-400 hover:text-primary-600"
+                    >
+                      {selectedIds.length === absentees.length && absentees.length > 0 ? (
+                        <CheckSquare className="w-4 h-4 text-primary-600" />
+                      ) : (
+                        <Square className="w-4 h-4" />
+                      )}
+                    </button>
+                  </th>
                   <th className="px-6 py-4">Jemaat</th>
                   <th className="px-6 py-4">Komsel</th>
                   <th className="px-6 py-4">Terakhir Hadir</th>
@@ -357,9 +526,25 @@ export default function AbsenteeFollowupReport() {
                 {absentees.map((member) => {
                   const isSevere = member.daysAbsent >= 60;
                   const isModerate = member.daysAbsent >= 30;
+                  const isSelected = selectedIds.includes(member.id);
 
                   return (
-                    <tr key={member.id} className="hover:bg-gray-50/80 transition-colors">
+                    <tr key={member.id} className={`hover:bg-gray-50/80 transition-colors ${isSelected ? 'bg-indigo-50/40' : ''}`}>
+                      {/* Checkbox */}
+                      <td className="px-4 py-4">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSelect(member.id)}
+                          className="text-gray-400 hover:text-primary-600"
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="w-4 h-4 text-primary-600" />
+                          ) : (
+                            <Square className="w-4 h-4" />
+                          )}
+                        </button>
+                      </td>
+
                       {/* Jemaat Info */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -445,21 +630,34 @@ export default function AbsenteeFollowupReport() {
 
                       {/* Aksi Follow-up */}
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* In-App Inbox Button */}
+                          <button
+                            onClick={() => openBulkModal('SELECTED', member)}
+                            className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold flex items-center gap-1 border border-indigo-200 transition-colors"
+                            title="Kirim Pesan In-App (Aplikasi Mobile)"
+                          >
+                            <Inbox className="w-3.5 h-3.5" />
+                            In-App
+                          </button>
+
+                          {/* WhatsApp Direct */}
                           <button
                             onClick={() => handleWhatsAppClick(member)}
-                            className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-emerald-200 transition-colors"
+                            className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold flex items-center gap-1 border border-emerald-200 transition-colors"
                             title="Kirim Sapaan WhatsApp Direct"
                           >
                             <MessageCircle className="w-3.5 h-3.5" />
-                            Sapa WA
+                            WA
                           </button>
+
+                          {/* Manual Pastoral Record */}
                           <button
                             onClick={() => openFollowupModal(member)}
-                            className="px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
+                            className="p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                            title="Catat Follow-up Manual"
                           >
                             <Plus className="w-3.5 h-3.5" />
-                            Catat Follow-up
                           </button>
                         </div>
                       </td>
@@ -472,7 +670,103 @@ export default function AbsenteeFollowupReport() {
         )}
       </div>
 
-      {/* Modal Input Catat Follow-up Pastoral */}
+      {/* Modal Bulk In-App Message */}
+      {isBulkModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100 relative space-y-4">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Send className="w-5 h-5 text-primary-600" />
+                Kirim In-App Message (Modul Komunikasi)
+              </h3>
+              <button onClick={() => setIsBulkModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-indigo-900 text-xs flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+              <span>
+                Target: <strong>{bulkTargetMode === 'SELECTED' ? `${selectedIds.length} Jemaat Terpilih` : `Semua ${absentees.length} Jemaat Jarang Hadir`}</strong>.
+                Pesan akan langsung masuk ke **Kotak Masuk Inbox Mobile Jemaat** dan otomatis mencatat status <em>Sudah Difollow-up</em>.
+              </span>
+            </div>
+
+            <form onSubmit={handleSendBulkInApp} className="space-y-4 text-sm">
+              {/* Template Selection */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Pilih Template Komunikasi</label>
+                <select
+                  value={bulkTemplateId}
+                  onChange={(e) => handleTemplateChange(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-sm focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="">-- Template Custom --</option>
+                  {templates.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Subject */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Judul / Subjek Pesan</label>
+                <input
+                  type="text"
+                  placeholder="Misal: Shalom {{name}}, kami merindukan persekutuan bersamamu"
+                  value={bulkSubject}
+                  onChange={(e) => setBulkSubject(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary-500"
+                  required
+                />
+                <span className="text-[10px] text-gray-400 mt-0.5 block">Gunakan <code className="bg-gray-100 px-1 rounded text-gray-600">{"{{name}}"}</code> untuk menyisipkan nama jemaat secara otomatis.</span>
+              </div>
+
+              {/* Body */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Isi Pesan In-App</label>
+                <textarea
+                  rows={5}
+                  placeholder="Tulis pesan sapaan penggembalaan untuk jemaat..."
+                  value={bulkBody}
+                  onChange={(e) => setBulkBody(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary-500"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setIsBulkModalOpen(false)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium text-sm"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={bulkSending}
+                  className="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium text-sm flex items-center gap-2 shadow-sm"
+                >
+                  {bulkSending ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Mengirim Pesan...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      Kirim Pesan Massal
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Input Catat Follow-up Pastoral Manual */}
       {isModalOpen && selectedMember && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100 relative space-y-4">
@@ -506,6 +800,7 @@ export default function AbsenteeFollowupReport() {
                     className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-sm focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="PHONE">Telepon / WhatsApp</option>
+                    <option value="INAPP">Pesan In-App Inbox</option>
                     <option value="HOME">Kunjungan Rumah (Besuk)</option>
                     <option value="HOSPITAL">Kunjungan Rumah Sakit</option>
                     <option value="COUNSELING">Konseling Khusus</option>
