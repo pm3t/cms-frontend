@@ -23,7 +23,8 @@ import {
   FolderOpen,
   Building2,
   BarChartIcon,
-  Radio
+  Radio,
+  MapPin
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
@@ -48,6 +49,7 @@ const DashboardLayout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Anggota', href: '/members', icon: Users },
+    { name: 'Sebaran Jemaat', href: '/members/map', icon: MapPin },
     { name: 'Kelompok Kecil', href: '/small-groups', icon: Users2 },
     { name: 'Absensi', href: '/attendance', icon: UserCheck },
     { name: 'Jadwal Ibadah', href: '/attendance/services', icon: CalendarCheck },

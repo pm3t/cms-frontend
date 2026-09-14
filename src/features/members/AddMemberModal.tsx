@@ -21,7 +21,11 @@ export default function AddMemberModal({ isOpen, onClose, onSuccess }: AddMember
         status: 'ACTIVE',
         category: 'ADULT',
         birthDate: '',
-        address: ''
+        address: '',
+        rayon: '',
+        district: '',
+        city: '',
+        postalCode: '',
     });
     const [ageRules, setAgeRules] = useState<any[]>([]);
     const [submitting, setSubmitting] = useState(false);
@@ -85,6 +89,10 @@ export default function AddMemberModal({ isOpen, onClose, onSuccess }: AddMember
                 ...formData,
                 birthDate: formData.birthDate ? new Date(formData.birthDate).toISOString() : null,
                 address: formData.address || null,
+                rayon: formData.rayon || null,
+                district: formData.district || null,
+                city: formData.city || null,
+                postalCode: formData.postalCode || null,
                 referenceNumber: formData.referenceNumber || null
             };
             await api.post('/members', payload);
@@ -224,6 +232,44 @@ export default function AddMemberModal({ isOpen, onClose, onSuccess }: AddMember
                                 value={formData.address}
                                 onChange={e => setFormData({ ...formData, address: e.target.value })}
                             />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-5">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Rayon / Sektor Wilayah</label>
+                                <Input
+                                    placeholder="e.g. Rayon 1 / Sektor Barat"
+                                    value={formData.rayon}
+                                    onChange={e => setFormData({ ...formData, rayon: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Kecamatan (District)</label>
+                                <Input
+                                    placeholder="e.g. Menteng"
+                                    value={formData.district}
+                                    onChange={e => setFormData({ ...formData, district: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-5">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Kota / Kabupaten</label>
+                                <Input
+                                    placeholder="e.g. Jakarta Pusat"
+                                    value={formData.city}
+                                    onChange={e => setFormData({ ...formData, city: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Kode Pos</label>
+                                <Input
+                                    placeholder="e.g. 10310"
+                                    value={formData.postalCode}
+                                    onChange={e => setFormData({ ...formData, postalCode: e.target.value })}
+                                />
+                            </div>
                         </div>
                     </form>
                 </div>

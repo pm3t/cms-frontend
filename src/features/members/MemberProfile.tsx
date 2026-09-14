@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { ArrowLeft, Camera, Users, BookOpen, Save, Trash2, Plus, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Camera, Users, BookOpen, Save, Trash2, Plus, ShieldCheck, MapPin } from 'lucide-react';
 import api from '../../lib/axios';
 import { resolveFileUrl } from '../../lib/config';
+import LocationPickerModal from './LocationPickerModal';
 
 export default function MemberProfile() {
     const { id } = useParams();
@@ -44,7 +45,14 @@ export default function MemberProfile() {
         status: 'ACTIVE',
         category: 'ADULT',
         isPrivate: false,
+        rayon: '',
+        district: '',
+        city: '',
+        postalCode: '',
+        latitude: null,
+        longitude: null,
     });
+    const [pickerModalOpen, setPickerModalOpen] = useState(false);
     const [ageRules, setAgeRules] = useState<any[]>([]);
 
     useEffect(() => {
@@ -112,6 +120,12 @@ export default function MemberProfile() {
                 status: memRes.value.data.status || 'ACTIVE',
                 category: memRes.value.data.category || 'ADULT',
                 isPrivate: memRes.value.data.isPrivate || false,
+                rayon: memRes.value.data.rayon || '',
+                district: memRes.value.data.district || '',
+                city: memRes.value.data.city || '',
+                postalCode: memRes.value.data.postalCode || '',
+                latitude: memRes.value.data.latitude ?? null,
+                longitude: memRes.value.data.longitude ?? null,
             });
 
             // Families — non-critical, default to empty list
@@ -387,6 +401,12 @@ export default function MemberProfile() {
                                         status: member.status || 'ACTIVE',
                                         category: member.category || 'ADULT',
                                         isPrivate: member.isPrivate || false,
+                                        rayon: member.rayon || '',
+                                        district: member.district || '',
+                                        city: member.city || '',
+                                        postalCode: member.postalCode || '',
+                                        latitude: member.latitude ?? null,
+                                        longitude: member.longitude ?? null,
                                     });
                                 }}>Cancel</Button>
                                 <Button onClick={handleSaveProfile} className="flex items-center gap-1">
@@ -512,6 +532,53 @@ export default function MemberProfile() {
                                 onChange={e => setEditForm({ ...editForm, address: e.target.value })}
                                 readOnly={!isEditing} 
                             />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Rayon / Sektor Wilayah</label>
+                            <Input 
+                                value={isEditing ? editForm.rayon : (member.rayon || '')} 
+                                onChange={e => setEditForm({ ...editForm, rayon: e.target.value })}
+                                readOnly={!isEditing} 
+                                placeholder="e.g. Rayon 1"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Kecamatan (District)</label>
+                            <Input 
+                                value={isEditing ? editForm.district : (member.district || '')} 
+                                onChange={e => setEditForm({ ...editForm, district: e.target.value })}
+                                readOnly={!isEditing} 
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Kota / Kabupaten</label>
+                            <Input 
+                                value={isEditing ? editForm.city : (member.city || '')} 
+                                onChange={e => setEditForm({ ...editForm, city: e.target.value })}
+                                readOnly={!isEditing} 
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Kode Pos</label>
+                            <Input 
+                                value={isEditing ? editForm.postalCode : (member.postalCode || '')} 
+                                onChange={e => setEditForm({ ...editForm, postalCode: e.target.value })}
+                                readOnly={!isEditing} 
+                            />
+                        </div>
+                        <div className="col-span-2 p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
+                            <div>
+                                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Koordinat Peta (Geolocated Pin)</h4>
+                                <p className="text-sm font-medium text-gray-900 mt-0.5">
+                                    {member.latitude !== null && member.longitude !== null
+                                        ? `Lat: ${member.latitude}, Lng: ${member.longitude}`
+                                        : 'Belum ada koordinat peta tersimpan'}
+                                </p>
+                            </div>
+                            <Button variant="outline" size="sm" onClick={() => setPickerModalOpen(true)}>
+                                <MapPin className="w-4 h-4 mr-1.5 text-blue-600" />
+                                {member.latitude !== null ? 'Ubah Posisi Peta' : 'Tetapkan di Peta'}
+                            </Button>
                         </div>
                         <div className="col-span-2">
                             <label className="flex items-center gap-2 text-sm text-gray-700 font-medium">
@@ -728,6 +795,29 @@ export default function MemberProfile() {
                     )}
                 </div>
             )}
+            {/* Location Picker Modal */}
+            <LocationPickerModal
+                isOpen={pickerModalOpen}
+                onClose={() => setPickerModalOpen(false)}
+                onSave={async (locData) => {
+                    try {
+                        await api.patch(`/members/${id}/location`, locData);
+                        await fetchData();
+                    } catch (err: any) {
+                        alert('Gagal menyimpan lokasi: ' + (err.response?.data?.error || err.message));
+                    }
+                }}
+                initialData={{
+                    latitude: member.latitude,
+                    longitude: member.longitude,
+                    address: member.address || '',
+                    rayon: member.rayon || '',
+                    district: member.district || '',
+                    city: member.city || '',
+                    postalCode: member.postalCode || '',
+                    name: `${member.firstName} ${member.lastName || ''}`
+                }}
+            />
         </div>
     );
 }

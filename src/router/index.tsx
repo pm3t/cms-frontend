@@ -30,6 +30,7 @@ const DashboardHome = lazy(() => import('../features/dashboard/DashboardHome'));
 // --- REAL FEATURE MODULES ---
 const MembersDirectory = lazy(() => import('../features/members/MembersDirectory'));
 const MemberProfile = lazy(() => import('../features/members/MemberProfile'));
+const CongregationMap = lazy(() => import('../features/members/CongregationMap'));
 const SmallGroupDashboard = lazy(() => import('../features/smallGroups/SmallGroupDashboard'));
 const AttendanceDashboard = lazy(() => import('../features/attendance/AttendanceDashboard'));
 const EventDashboard = lazy(() => import('../features/events/EventDashboard'));
@@ -78,6 +79,7 @@ const AppRouter: React.FC = () => {
             
             {/* Real Feature Routes */}
             <Route path="/members" element={<MembersDirectory />} />
+            <Route path="/members/map" element={<CongregationMap />} />
             <Route path="/members/:id" element={<MemberProfile />} />
             <Route path="/small-groups" element={<SmallGroupDashboard />} />
             <Route path="/small-groups/:id" element={<GroupDetail />} />
