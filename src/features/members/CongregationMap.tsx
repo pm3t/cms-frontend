@@ -48,6 +48,9 @@ export default function CongregationMap() {
   const [pickerModalOpen, setPickerModalOpen] = useState<boolean>(false);
   const [selectedMemberForPicker, setSelectedMemberForPicker] = useState<any>(null);
 
+  // Modal State for Church HQ Location Picker
+  const [churchPickerOpen, setChurchPickerOpen] = useState<boolean>(false);
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
@@ -253,6 +256,20 @@ export default function CongregationMap() {
     }
   };
 
+  const handleSaveChurchLocation = async (locData: any) => {
+    try {
+      await api.patch('/tenant/profile', {
+        latitude: locData.latitude,
+        longitude: locData.longitude,
+        address: locData.address || undefined
+      });
+      alert('Lokasi Peta Gereja Pusat (HQ) berhasil diperbarui!');
+      await fetchMapData();
+    } catch (err: any) {
+      alert('Gagal update lokasi gereja: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
   const metrics = mapData?.metrics || {
     totalMembers: 0,
     mappedMembersCount: 0,
@@ -282,6 +299,10 @@ export default function CongregationMap() {
           </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => setChurchPickerOpen(true)}>
+            <Building2 className="w-4 h-4 mr-2 text-blue-600" />
+            Set Lokasi Gereja (HQ)
+          </Button>
           <Button variant="outline" onClick={fetchMapData} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh Data
@@ -516,7 +537,7 @@ export default function CongregationMap() {
         )}
       </div>
 
-      {/* Location Picker Modal */}
+      {/* Member Location Picker Modal */}
       <LocationPickerModal
         isOpen={pickerModalOpen}
         onClose={() => setPickerModalOpen(false)}
@@ -535,6 +556,19 @@ export default function CongregationMap() {
               }
             : undefined
         }
+      />
+
+      {/* Church HQ Location Picker Modal */}
+      <LocationPickerModal
+        isOpen={churchPickerOpen}
+        onClose={() => setChurchPickerOpen(false)}
+        onSave={handleSaveChurchLocation}
+        initialData={{
+          latitude: mapData?.tenantHQ?.latitude,
+          longitude: mapData?.tenantHQ?.longitude,
+          address: mapData?.tenantHQ?.address,
+          name: mapData?.tenantHQ?.name || 'Gereja Pusat (HQ)'
+        }}
       />
     </div>
   );
