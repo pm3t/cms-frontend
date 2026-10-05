@@ -73,7 +73,7 @@ export default function ChurchProfileForm() {
     return (
         <>
             <form onSubmit={handleSave} className="space-y-6 max-w-2xl bg-white/50 backdrop-blur-xl p-8 rounded-2xl border border-gray-100 shadow-sm">
-                <h3 className="text-xl font-bold text-gray-800 border-b border-gray-100 pb-4">Church Profile & Location</h3>
+                <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-100 pb-4">Church Profile & Location</h3>
 
                 <Input label="Church Name (Read Only)" type="text" value={formData.name} disabled />
                 <Input label="Headquarters Address" type="text" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} placeholder="123 Main St, City" />
@@ -87,7 +87,7 @@ export default function ChurchProfileForm() {
                 <div className="p-4 bg-blue-50/70 border border-blue-200 rounded-xl space-y-3">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h4 className="text-sm font-bold text-blue-900 flex items-center">
+                            <h4 className="text-base font-medium text-blue-900 flex items-center">
                                 <MapPin className="w-4 h-4 mr-1.5 text-blue-600" />
                                 Lokasi Peta Gereja Pusat (HQ Pin)
                             </h4>
@@ -102,7 +102,7 @@ export default function ChurchProfileForm() {
 
                     <div className="grid grid-cols-2 gap-4 pt-1">
                         <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">Latitude (Lintang)</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Latitude (Lintang)</label>
                             <Input
                                 type="number"
                                 step="any"
@@ -112,7 +112,7 @@ export default function ChurchProfileForm() {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1">Longitude (Bujur)</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Longitude (Bujur)</label>
                             <Input
                                 type="number"
                                 step="any"

@@ -260,7 +260,7 @@ export default function DigitalDashboard() {
         {tab === 'SERMONS' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-1 border border-gray-100 rounded-xl p-5 bg-gray-50">
-              <h3 className="font-bold mb-4">Tambah Khotbah Baru</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Tambah Khotbah Baru</h3>
               <form onSubmit={handleAddSermon} className="space-y-4">
                 <input name="title" required placeholder="Judul Khotbah" className="w-full px-3 py-2 border rounded-lg text-sm bg-white" />
                 <input name="preacher" required placeholder="Nama Pengkhotbah" className="w-full px-3 py-2 border rounded-lg text-sm bg-white" />
@@ -275,7 +275,7 @@ export default function DigitalDashboard() {
               {sermons.map(s => (
                 <div key={s.id} className="border border-gray-100 p-4 rounded-xl flex justify-between items-center bg-white shadow-sm hover:border-purple-200 transition-all">
                   <div className="space-y-1">
-                    <h4 className="font-bold text-gray-900 text-lg">{s.title}</h4>
+                    <h4 className="text-base font-medium text-gray-900">{s.title}</h4>
                     <p className="text-xs text-gray-500">{new Date(s.date).toLocaleDateString('id-ID')} • {s.preacher}</p>
                     {s.description && <p className="text-xs text-gray-600 max-w-lg mt-1 italic">{s.description}</p>}
                     
@@ -311,14 +311,14 @@ export default function DigitalDashboard() {
         {tab === 'DEVOTIONS' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-1 border border-gray-100 rounded-xl p-5 bg-gray-50">
-              <h3 className="font-bold mb-4">{editingDevotion ? 'Edit Renungan Harian' : 'Tulis Renungan Harian'}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{editingDevotion ? 'Edit Renungan Harian' : 'Tulis Renungan Harian'}</h3>
               <form 
                 key={editingDevotion ? editingDevotion.id : 'new-devotion'} 
                 onSubmit={handleSubmitDevotion} 
                 className="space-y-4"
               >
                 <div>
-                  <label className="text-xs font-bold text-gray-600 mb-1 block">Judul Renungan</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Judul Renungan</label>
                   <input 
                     name="title" 
                     required 
@@ -329,7 +329,7 @@ export default function DigitalDashboard() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-xs font-bold text-gray-600 mb-1 block">Nats Alkitab</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nats Alkitab</label>
                     <input 
                       name="scriptureReference" 
                       required 
@@ -339,7 +339,7 @@ export default function DigitalDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-600 mb-1 block">Tanggal Tayang</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Tayang</label>
                     <input 
                       name="publishDate" 
                       required 
@@ -350,7 +350,7 @@ export default function DigitalDashboard() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-600 mb-1 block">Teks Ayat Ayat (Opsional)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Teks Ayat Ayat (Opsional)</label>
                   <textarea 
                     name="passageText" 
                     rows={2} 
@@ -360,7 +360,7 @@ export default function DigitalDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-600 mb-1 block">Isi Renungan</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Isi Renungan</label>
                   <textarea 
                     name="content" 
                     required 
@@ -371,7 +371,7 @@ export default function DigitalDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-600 mb-1 block">Penulis</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Penulis</label>
                   <input 
                     name="author" 
                     defaultValue={editingDevotion ? (editingDevotion.author || '') : 'Tim Pastoral'} 
@@ -396,7 +396,7 @@ export default function DigitalDashboard() {
               </form>
             </div>
             <div className="md:col-span-2 space-y-3">
-              <h3 className="font-bold text-gray-800 text-lg mb-2">Jadwal Renungan Terbit</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Jadwal Renungan Terbit</h3>
               {devotions.map(d => (
                 <div key={d.id} className="border border-gray-100 p-5 rounded-xl bg-white shadow-sm hover:border-purple-200 transition-all space-y-2">
                   <div className="flex justify-between items-start">
@@ -404,7 +404,7 @@ export default function DigitalDashboard() {
                       <span className="px-2 py-0.5 bg-purple-50 text-purple-700 text-[10px] font-bold rounded border border-purple-100 uppercase tracking-wide">
                         Tanggal: {new Date(d.publishDate).toLocaleDateString('id-ID')}
                       </span>
-                      <h4 className="font-bold text-gray-900 text-lg mt-1.5">{d.title}</h4>
+                      <h4 className="text-base font-medium text-gray-900 mt-1.5">{d.title}</h4>
                       <p className="text-xs text-gray-500 font-bold mt-0.5">{d.scriptureReference} • Ditulis oleh: {d.author}</p>
                     </div>
                     <div className="flex gap-1">
@@ -436,14 +436,14 @@ export default function DigitalDashboard() {
         {tab === 'BIBLE_PLANS' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-1 border border-gray-100 rounded-xl p-5 bg-gray-50">
-              <h3 className="font-bold mb-4">{editingPlan ? 'Edit Rencana Baca Alkitab' : 'Buat Rencana Baca Alkitab'}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{editingPlan ? 'Edit Rencana Baca Alkitab' : 'Buat Rencana Baca Alkitab'}</h3>
               <form 
                 key={editingPlan ? editingPlan.id : 'new-plan'} 
                 onSubmit={handleSubmitBiblePlan} 
                 className="space-y-4"
               >
                 <div>
-                  <label className="text-xs font-bold text-gray-600 mb-1 block">Nama Program</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nama Program</label>
                   <input 
                     name="title" 
                     required 
@@ -453,7 +453,7 @@ export default function DigitalDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-600 mb-1 block">Deskripsi Singkat</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi Singkat</label>
                   <textarea 
                     name="description" 
                     rows={2} 
@@ -463,7 +463,7 @@ export default function DigitalDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-600 mb-1 block">Daftar Ayat Harian (Tiap Baris = 1 Hari)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Daftar Ayat Harian (Tiap Baris = 1 Hari)</label>
                   <textarea 
                     name="passages" 
                     required 
@@ -493,13 +493,13 @@ export default function DigitalDashboard() {
             </div>
             
             <div className="md:col-span-2 space-y-4">
-              <h3 className="font-bold text-gray-800 text-lg">Program Rencana Baca Alkitab</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Program Rencana Baca Alkitab</h3>
               <div className="grid grid-cols-1 gap-4">
                 {biblePlans.map(p => (
                   <div key={p.id} className="border border-gray-100 p-5 rounded-xl bg-white shadow-sm hover:border-purple-200 transition-all flex flex-col justify-between">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h4 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                        <h4 className="text-base font-medium text-gray-900 flex items-center gap-2">
                           <Book className="w-5 h-5 text-purple-600" /> {p.title}
                         </h4>
                         <p className="text-xs text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-100 w-fit mt-1">
@@ -557,7 +557,7 @@ export default function DigitalDashboard() {
         {tab === 'INTEGRATIONS' && config && (
           <div className="space-y-8 max-w-3xl">
             <div className="border border-gray-100 rounded-xl p-6 shadow-sm bg-white">
-              <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4"><Key className="w-5 h-5 text-purple-600" /> Website API Key</h3>
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4"><Key className="w-5 h-5 text-purple-600" /> Website API Key</h3>
               <p className="text-sm text-gray-500 mb-4">Gunakan API Key ini untuk menarik data khotbah dan live stream ke website resmi gereja.</p>
               <div className="flex items-center gap-2">
                 <input readOnly value={config.websiteApiKey || 'Belum di-generate'} className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 font-mono text-sm text-gray-700" />
@@ -566,15 +566,15 @@ export default function DigitalDashboard() {
             </div>
 
             <form onSubmit={handleSaveConfig} className="border border-gray-100 rounded-xl p-6 shadow-sm space-y-4 bg-white">
-              <h3 className="font-bold text-gray-900 mb-2">Konfigurasi Integrasi</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Konfigurasi Integrasi</h3>
               
               <div>
-                <label className="text-xs font-bold text-gray-700 mb-1 block">Link Live Streaming Default (YouTube/Zoom)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Link Live Streaming Default (YouTube/Zoom)</label>
                 <input name="liveStreamUrl" defaultValue={config.liveStreamUrl} placeholder="https://..." className="w-full px-3 py-2 border rounded-lg text-sm" />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-700 mb-1 block">Social Media Webhook (Zapier/Make.com)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Social Media Webhook (Zapier/Make.com)</label>
                 <input name="socialWebhookUrl" defaultValue={config.socialWebhookUrl} placeholder="https://hooks.zapier.com/..." className="w-full px-3 py-2 border rounded-lg text-sm" />
                 <p className="text-xs text-gray-500 mt-1">Sistem akan menembakkan payload ke URL ini saat konten baru ditambahkan.</p>
               </div>
