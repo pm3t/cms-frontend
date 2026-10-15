@@ -24,7 +24,8 @@ import {
   Building2,
   BarChartIcon,
   Radio,
-  MapPin
+  MapPin,
+  Home
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
@@ -49,6 +50,7 @@ const DashboardLayout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Anggota', href: '/members', icon: Users },
+    { name: 'Keluarga & KKJ', href: '/members/families', icon: Home },
     { name: 'Sebaran Jemaat', href: '/members/map', icon: MapPin },
     { name: 'Kelompok Kecil', href: '/small-groups', icon: Users2 },
     { name: 'Absensi', href: '/attendance', icon: UserCheck },

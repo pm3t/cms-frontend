@@ -31,6 +31,9 @@ const DashboardHome = lazy(() => import('../features/dashboard/DashboardHome'));
 const MembersDirectory = lazy(() => import('../features/members/MembersDirectory'));
 const MemberProfile = lazy(() => import('../features/members/MemberProfile'));
 const CongregationMap = lazy(() => import('../features/members/CongregationMap'));
+const FamilyList = lazy(() => import('../features/members/families/FamilyList'));
+const FamilyDetail = lazy(() => import('../features/members/families/FamilyDetail'));
+const FamilyPrintKKJ = lazy(() => import('../features/members/families/FamilyPrintKKJ'));
 const SmallGroupDashboard = lazy(() => import('../features/smallGroups/SmallGroupDashboard'));
 const AttendanceDashboard = lazy(() => import('../features/attendance/AttendanceDashboard'));
 const EventDashboard = lazy(() => import('../features/events/EventDashboard'));
@@ -80,6 +83,9 @@ const AppRouter: React.FC = () => {
             {/* Real Feature Routes */}
             <Route path="/members" element={<MembersDirectory />} />
             <Route path="/members/map" element={<CongregationMap />} />
+            <Route path="/members/families" element={<FamilyList />} />
+            <Route path="/members/families/:id" element={<FamilyDetail />} />
+            <Route path="/members/families/:id/print" element={<FamilyPrintKKJ />} />
             <Route path="/members/:id" element={<MemberProfile />} />
             <Route path="/small-groups" element={<SmallGroupDashboard />} />
             <Route path="/small-groups/:id" element={<GroupDetail />} />

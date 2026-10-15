@@ -654,18 +654,44 @@ export default function MemberProfile() {
                         </div>
 
                         {member.familyId && member.family && (
-                            <div className="p-5 border border-blue-200 rounded-xl bg-blue-50 relative overflow-hidden">
+                            <div className="p-5 border border-blue-200 rounded-xl bg-blue-50 relative overflow-hidden flex flex-col justify-between">
                                 <div className="absolute right-0 top-0 w-24 h-24 bg-blue-100 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                                <h4 className="font-bold text-blue-900">Current Family: {member.family.name}</h4>
-                                <p className="text-sm border-blue-200 mt-1">
-                                    {member.family.headOfFamilyId === member.id ? (
-                                        <span className="text-blue-700 font-bold items-center flex mt-2"><ShieldCheck className="w-4 h-4 mr-1" /> You are the Head of this Family</span>
-                                    ) : (
-                                        <Button variant="outline" size="sm" className="mt-3 bg-white border-blue-300 text-blue-700" onClick={handleSetAsHead}>
-                                            Set as Head of Family
-                                        </Button>
-                                    )}
-                                </p>
+                                <div>
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="font-bold text-blue-900 text-base">{member.family.name}</h4>
+                                        {member.family.kkjNumber && (
+                                            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-200/80 text-blue-900">
+                                                {member.family.kkjNumber}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-blue-800 mt-1">
+                                        Kedudukan dalam KKJ: <strong className="uppercase">{member.familyRole || 'Anggota'}</strong> {member.familyRelation && `(${member.familyRelation})`}
+                                    </p>
+                                    <div className="text-sm mt-2">
+                                        {member.family.headOfFamilyId === member.id ? (
+                                            <span className="text-blue-700 font-bold items-center flex"><ShieldCheck className="w-4 h-4 mr-1 text-blue-600" /> Kepala Rohani / Keluarga</span>
+                                        ) : (
+                                            <Button variant="outline" size="sm" className="mt-1 bg-white border-blue-300 text-blue-700 text-xs" onClick={handleSetAsHead}>
+                                                Jadikan Kepala Keluarga
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="mt-4 pt-3 border-t border-blue-200/70 flex items-center gap-2">
+                                    <Link
+                                        to={`/members/families/${member.familyId}`}
+                                        className="text-xs font-bold text-blue-700 hover:text-blue-900 bg-white px-3 py-1.5 rounded-lg border border-blue-200 shadow-sm flex items-center gap-1"
+                                    >
+                                        <Home className="w-3.5 h-3.5" /> Kelola KKJ
+                                    </Link>
+                                    <Link
+                                        to={`/members/families/${member.familyId}/print`}
+                                        className="text-xs font-bold text-indigo-700 hover:text-indigo-900 bg-white px-3 py-1.5 rounded-lg border border-indigo-200 shadow-sm flex items-center gap-1"
+                                    >
+                                        <Printer className="w-3.5 h-3.5" /> Cetak Lembar KKJ
+                                    </Link>
+                                </div>
                             </div>
                         )}
                     </div>
