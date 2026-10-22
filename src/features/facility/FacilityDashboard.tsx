@@ -42,9 +42,9 @@ export default function FacilityDashboard() {
   const unpaid = utilities.filter(u => !u.isPaid).length;
 
   const tabs = [
-    { id: 'ROOMS', name: 'Ruangan', icon: DoorOpen, color: 'text-blue-500', count: facilities.length },
+    { id: 'ROOMS', name: 'Ruangan', icon: DoorOpen, color: 'text-blue-500' },
     { id: 'BOOKINGS', name: 'Reservasi', icon: Calendar, color: 'text-emerald-500', count: pending || undefined, countLabel: 'pending' },
-    { id: 'EQUIPMENT', name: 'Inventaris', icon: Wrench, color: 'text-purple-500', count: equipments.length },
+    { id: 'EQUIPMENT', name: 'Inventaris', icon: Wrench, color: 'text-purple-500' },
     { id: 'MAINTENANCE', name: 'Perawatan', icon: Wrench, color: 'text-orange-500', count: overdue || undefined, countLabel: 'overdue' },
     { id: 'UTILITIES', name: 'Utilitas', icon: Zap, color: 'text-yellow-500', count: unpaid || undefined, countLabel: 'belum lunas' },
   ];

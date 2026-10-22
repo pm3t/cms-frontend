@@ -132,6 +132,21 @@ export default function EquipmentView({ equipments, onRefresh }: Props) {
         </div>
       )}
 
+      {equipments.filter(e => !e.isActive).length > 0 && (
+        <div className="border border-gray-100 rounded-2xl p-4">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+            {equipments.filter(e => !e.isActive).length} Peralatan Nonaktif
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {equipments.filter(e => !e.isActive).map(e => (
+              <span key={e.id} className="text-xs bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full font-semibold">
+                {e.name} ({e.category})
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Create/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
