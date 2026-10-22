@@ -70,6 +70,13 @@ export default function ImportMembersModal({ isOpen, onClose, onSuccess }: Impor
                             className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
                         />
                     </div>
+
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-800 flex items-start gap-2">
+                        <span className="text-base leading-none">💡</span>
+                        <span>
+                            <strong>Password Login Jemaat:</strong> Akun jemaat hasil import otomatis diberikan password default sesuai tanggal lahir format <strong>ddmmyyyy</strong> (contoh: 17 Agustus 1995 menjadi <code>17081995</code>).
+                        </span>
+                    </div>
                 </div>
 
                 <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
