@@ -4,6 +4,7 @@ export interface UserProfile {
   email: string;
   role: string;
   organization_id: string;
+  permissions?: string[];
 }
 
 export interface LoginResponse {

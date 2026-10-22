@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
+import ModuleRoute from '../components/auth/ModuleRoute';
 import SuperAdminRoute from '../components/auth/SuperAdminRoute';
 import DashboardLayout from '../layouts/DashboardLayout';
 import SuperAdminLayout from '../layouts/SuperAdminLayout';
@@ -78,35 +79,76 @@ const AppRouter: React.FC = () => {
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardHome />} />
             
-            {/* Real Feature Routes */}
-            <Route path="/members" element={<MembersDirectory />} />
-            <Route path="/members/map" element={<CongregationMap />} />
-            <Route path="/members/families" element={<FamilyList />} />
-            <Route path="/members/families/:id" element={<FamilyDetail />} />
-            <Route path="/members/families/:id/print" element={<FamilyPrintKKJ />} />
-            <Route path="/members/:id" element={<MemberProfile />} />
-            <Route path="/small-groups" element={<SmallGroupDashboard />} />
-            <Route path="/small-groups/:id" element={<GroupDetail />} />
-            <Route path="/small-groups/:id/meetings/:meetingId" element={<MeetingDetail />} />
-            <Route path="/attendance" element={<AttendanceDashboard />} />
-            <Route path="/attendance/services" element={<ServiceManager />} />
-            <Route path="/attendance/check-in" element={<CheckInPage />} />
-            <Route path="/attendance/alerts" element={<AbsenteeFollowupReport />} />
-            <Route path="/reports/pastoral-followup" element={<AbsenteeFollowupReport />} />
-            <Route path="/events" element={<EventDashboard />} />
-            <Route path="/events/:id" element={<EventDetails />} />
-            <Route path="/communication" element={<CommunicationDashboard />} />
-            <Route path="/finance" element={<FinanceDashboard />} />
-            <Route path="/ministry" element={<MinistryDashboard />} />
-            <Route path="/pastoral" element={<PastoralDashboard />} />
-            <Route path="/documents" element={<DocumentDashboard />} />
-            <Route path="/facility" element={<FacilityDashboard />} />
-            <Route path="/reports" element={<ReportingDashboard />} />
-            <Route path="/digital" element={<DigitalDashboard />} />
-            
-            <Route path="/users" element={<UserManagementPage />} />
+            {/* Real Feature Routes with Module-based Access Control */}
+            <Route element={<ModuleRoute moduleKey="dashboard" />}>
+              <Route path="/dashboard" element={<DashboardHome />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="members" />}>
+              <Route path="/members" element={<MembersDirectory />} />
+              <Route path="/members/map" element={<CongregationMap />} />
+              <Route path="/members/families" element={<FamilyList />} />
+              <Route path="/members/families/:id" element={<FamilyDetail />} />
+              <Route path="/members/families/:id/print" element={<FamilyPrintKKJ />} />
+              <Route path="/members/:id" element={<MemberProfile />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="small_groups" />}>
+              <Route path="/small-groups" element={<SmallGroupDashboard />} />
+              <Route path="/small-groups/:id" element={<GroupDetail />} />
+              <Route path="/small-groups/:id/meetings/:meetingId" element={<MeetingDetail />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="attendance" />}>
+              <Route path="/attendance" element={<AttendanceDashboard />} />
+              <Route path="/attendance/services" element={<ServiceManager />} />
+              <Route path="/attendance/check-in" element={<CheckInPage />} />
+              <Route path="/attendance/alerts" element={<AbsenteeFollowupReport />} />
+              <Route path="/reports/pastoral-followup" element={<AbsenteeFollowupReport />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="events" />}>
+              <Route path="/events" element={<EventDashboard />} />
+              <Route path="/events/:id" element={<EventDetails />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="communication" />}>
+              <Route path="/communication" element={<CommunicationDashboard />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="finance" />}>
+              <Route path="/finance" element={<FinanceDashboard />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="ministry" />}>
+              <Route path="/ministry" element={<MinistryDashboard />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="pastoral" />}>
+              <Route path="/pastoral" element={<PastoralDashboard />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="documents" />}>
+              <Route path="/documents" element={<DocumentDashboard />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="facility" />}>
+              <Route path="/facility" element={<FacilityDashboard />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="reports" />}>
+              <Route path="/reports" element={<ReportingDashboard />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="digital" />}>
+              <Route path="/digital" element={<DigitalDashboard />} />
+            </Route>
+
+            <Route element={<ModuleRoute moduleKey="users" />}>
+              <Route path="/users" element={<UserManagementPage />} />
+            </Route>
+
             <Route path="/settings" element={<SettingsLayout />} />
             
             {/* Billing Routes */}

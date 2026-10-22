@@ -48,31 +48,43 @@ const DashboardLayout: React.FC = () => {
   const plan = useSubscriptionStore((state) => state.plan);
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Anggota', href: '/members', icon: Users },
-    { name: 'Keluarga & KKJ', href: '/members/families', icon: Home },
-    { name: 'Sebaran Jemaat', href: '/members/map', icon: MapPin },
-    { name: 'Kelompok Kecil', href: '/small-groups', icon: Users2 },
-    { name: 'Absensi', href: '/attendance', icon: UserCheck },
-    { name: 'Jadwal Ibadah', href: '/attendance/services', icon: CalendarCheck },
-    { name: 'Check-in Jemaat', href: '/attendance/check-in', icon: ScanLine },
-    { name: 'Acara', href: '/events', icon: Calendar },
-    { name: 'Komunikasi', href: '/communication', icon: MessageSquare },
-    { name: 'Keuangan', href: '/finance', icon: PieChart },
-    { name: 'Pelayanan', href: '/ministry', icon: Sparkles },
-    { name: 'Pastoral Care', href: '/pastoral', icon: HeartHandshake },
-    { name: 'Dokumen', href: '/documents', icon: FolderOpen },
-    { name: 'Fasilitas', href: '/facility', icon: Building2 },
-    { name: 'Laporan', href: '/reports', icon: BarChartIcon },
-    { name: 'Digital', href: '/digital', icon: Radio },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, moduleKey: 'dashboard' },
+    { name: 'Anggota', href: '/members', icon: Users, moduleKey: 'members' },
+    { name: 'Keluarga & KKJ', href: '/members/families', icon: Home, moduleKey: 'members' },
+    { name: 'Sebaran Jemaat', href: '/members/map', icon: MapPin, moduleKey: 'members' },
+    { name: 'Kelompok Kecil', href: '/small-groups', icon: Users2, moduleKey: 'small_groups' },
+    { name: 'Absensi', href: '/attendance', icon: UserCheck, moduleKey: 'attendance' },
+    { name: 'Jadwal Ibadah', href: '/attendance/services', icon: CalendarCheck, moduleKey: 'attendance' },
+    { name: 'Check-in Jemaat', href: '/attendance/check-in', icon: ScanLine, moduleKey: 'attendance' },
+    { name: 'Acara', href: '/events', icon: Calendar, moduleKey: 'events' },
+    { name: 'Komunikasi', href: '/communication', icon: MessageSquare, moduleKey: 'communication' },
+    { name: 'Keuangan', href: '/finance', icon: PieChart, moduleKey: 'finance' },
+    { name: 'Pelayanan', href: '/ministry', icon: Sparkles, moduleKey: 'ministry' },
+    { name: 'Pastoral Care', href: '/pastoral', icon: HeartHandshake, moduleKey: 'pastoral' },
+    { name: 'Dokumen', href: '/documents', icon: FolderOpen, moduleKey: 'documents' },
+    { name: 'Fasilitas', href: '/facility', icon: Building2, moduleKey: 'facility' },
+    { name: 'Laporan', href: '/reports', icon: BarChartIcon, moduleKey: 'reports' },
+    { name: 'Digital', href: '/digital', icon: Radio, moduleKey: 'digital' },
   ];
 
   const billingNav = [
-    { name: 'Manajemen User', href: '/users', icon: Users },
+    { name: 'Manajemen User', href: '/users', icon: Users, moduleKey: 'users' },
     { name: 'Billing', href: '/billing', icon: CreditCard },
     { name: 'Invoice', href: '/billing/invoices', icon: FileText },
     { name: 'Pengaturan', href: '/settings', icon: Settings },
   ];
+
+  const hasAccess = (moduleKey?: string) => {
+    if (!moduleKey) return true;
+    if (!user) return false;
+    if (user.role === 'Super Admin') return true;
+    // Default fallback if permissions array is undefined: allow full access
+    if (!user.permissions) return true;
+    return user.permissions.includes(moduleKey) || user.permissions.includes('*');
+  };
+
+  const filteredNavigation = navigation.filter(item => hasAccess(item.moduleKey));
+  const filteredBillingNav = billingNav.filter(item => hasAccess(item.moduleKey));
 
   const handleLogout = () => {
     clearAuth();
@@ -107,45 +119,53 @@ const DashboardLayout: React.FC = () => {
 
             {/* Nav Links */}
             <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-              <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Pelayanan</p>
-              {navigation.map((item) => {
-                const isActive = location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`
-                      flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
-                      ${isActive 
-                        ? 'bg-blue-50 text-blue-700' 
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
-                    `}
-                  >
-                    <item.icon className={`mr-3 h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
-                    {item.name}
-                  </Link>
-                );
-              })}
+              {filteredNavigation.length > 0 && (
+                <>
+                  <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Pelayanan</p>
+                  {filteredNavigation.map((item) => {
+                    const isActive = location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className={`
+                          flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
+                          ${isActive 
+                            ? 'bg-blue-50 text-blue-700' 
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+                        `}
+                      >
+                        <item.icon className={`mr-3 h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                </>
+              )}
 
-              <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-6 mb-2">Administrasi</p>
-              {billingNav.map((item) => {
-                const isActive = location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`
-                      flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
-                      ${isActive 
-                        ? 'bg-blue-50 text-blue-700' 
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
-                    `}
-                  >
-                    <item.icon className={`mr-3 h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
-                    {item.name}
-                  </Link>
-                );
-              })}
+              {filteredBillingNav.length > 0 && (
+                <>
+                  <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-6 mb-2">Administrasi</p>
+                  {filteredBillingNav.map((item) => {
+                    const isActive = location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className={`
+                          flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
+                          ${isActive 
+                            ? 'bg-blue-50 text-blue-700' 
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+                        `}
+                      >
+                        <item.icon className={`mr-3 h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                </>
+              )}
             </nav>
 
             {/* Bottom Section: Tenant Info & Plan */}
