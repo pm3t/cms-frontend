@@ -3,33 +3,53 @@ import { reportingService } from './reportingService';
 import { TrendingUp, TrendingDown, Users, HeartHandshake, Wallet, Smartphone } from 'lucide-react';
 import { useChartSize } from './useChartSize';
 
-interface GrowthPoint { month: string; newMembers: number; }
+interface GrowthPoint { 
+  month: string; 
+  newMembers: number; 
+  organicMembers?: number;
+  importedMembers?: number;
+  cumulativeTotal?: number;
+}
 
-function SVGGrowthChart({ data, width, height }: { data: GrowthPoint[]; width: number; height: number }) {
+function SVGGrowthChart({ 
+  data, 
+  width, 
+  height, 
+  viewType = 'monthly' 
+}: { 
+  data: GrowthPoint[]; 
+  width: number; 
+  height: number;
+  viewType?: 'monthly' | 'cumulative';
+}) {
   if (!data || data.length === 0) {
     return <div className="flex items-center justify-center h-full text-gray-400 text-sm">Belum ada data pertumbuhan</div>;
   }
 
-  const pad = { top: 16, right: 16, bottom: 36, left: 32 };
+  const pad = { top: 16, right: 16, bottom: 36, left: 36 };
   const w = width - pad.left - pad.right;
   const h = height - pad.top - pad.bottom;
-  const maxVal = Math.max(...data.map(d => d.newMembers), 1);
+  
+  const getValue = (d: GrowthPoint) => viewType === 'cumulative' ? (d.cumulativeTotal ?? d.newMembers) : d.newMembers;
+  const maxVal = Math.max(...data.map(getValue), 1);
   const step = data.length > 1 ? w / (data.length - 1) : w;
 
   const points = data.map((d, i) => ({
     x: data.length > 1 ? i * step : w / 2,
-    y: h - (d.newMembers / maxVal) * h,
+    y: h - (getValue(d) / maxVal) * h,
+    val: getValue(d),
     ...d
   }));
 
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+  const strokeColor = viewType === 'cumulative' ? '#10b981' : '#3b82f6';
 
   return (
     <svg width={width} height={height}>
       <defs>
         <linearGradient id="growthGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3b82f6" />
-          <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+          <stop offset="0%" stopColor={strokeColor} />
+          <stop offset="100%" stopColor={strokeColor} stopOpacity={0} />
         </linearGradient>
       </defs>
       <g transform={`translate(${pad.left},${pad.top})`}>
@@ -42,15 +62,18 @@ function SVGGrowthChart({ data, width, height }: { data: GrowthPoint[]; width: n
         <path
           d={`${pathD} L ${points[points.length - 1].x.toFixed(1)} ${h} L ${points[0].x.toFixed(1)} ${h} Z`}
           fill="url(#growthGrad)"
-          opacity={0.2}
+          opacity={0.15}
         />
 
         {/* Line */}
-        <path d={pathD} fill="none" stroke="#3b82f6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+        <path d={pathD} fill="none" stroke={strokeColor} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
 
         {/* Dots */}
         {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r={4} fill="white" stroke="#3b82f6" strokeWidth={2} />
+          <g key={i}>
+            <circle cx={p.x} cy={p.y} r={4} fill="white" stroke={strokeColor} strokeWidth={2} />
+            <title>{`${p.month}: ${p.val.toLocaleString('id-ID')} jemaat`}</title>
+          </g>
         ))}
 
         {/* X Labels — show only first, middle, and last to avoid clutter */}
@@ -68,20 +91,44 @@ function SVGGrowthChart({ data, width, height }: { data: GrowthPoint[]; width: n
 export default function AnalyticsView() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [includeImported, setIncludeImported] = useState(false);
+  const [growthViewType, setGrowthViewType] = useState<'monthly' | 'cumulative'>('monthly');
+  const [loadingGrowth, setLoadingGrowth] = useState(false);
   const { ref, width, height } = useChartSize(256);
 
-  useEffect(() => {
-    Promise.all([
-      reportingService.getGrowthAnalytics(),
-      reportingService.getEngagementMetrics(),
-      reportingService.getFinancialAnalytics(),
-      reportingService.getBenchmarking()
-    ])
-    .then(([growth, eng, fin, bench]) => {
+  const loadData = async (inc: boolean) => {
+    try {
+      const [growth, eng, fin, bench] = await Promise.all([
+        reportingService.getGrowthAnalytics(inc),
+        reportingService.getEngagementMetrics(),
+        reportingService.getFinancialAnalytics(),
+        reportingService.getBenchmarking(inc)
+      ]);
       setData({ growth, eng, fin, bench });
-    })
-    .catch(console.error)
-    .finally(() => setLoading(false));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadGrowthData = async (inc: boolean) => {
+    setLoadingGrowth(true);
+    try {
+      const [growth, bench] = await Promise.all([
+        reportingService.getGrowthAnalytics(inc),
+        reportingService.getBenchmarking(inc)
+      ]);
+      setData((prev: any) => ({ ...prev, growth, bench: { ...prev.bench, growth: bench.growth } }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingGrowth(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData(false);
   }, []);
 
   if (loading) return <div className="p-8 text-center text-gray-500">Memuat analisis mendalam...</div>;
@@ -113,14 +160,71 @@ export default function AnalyticsView() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Growth Analytics */}
         <div className="border border-gray-100 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <Users className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-bold text-gray-900">Tren Pertumbuhan Jemaat</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-blue-600" />
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Tren Pertumbuhan Jemaat</h3>
+                <p className="text-xs text-gray-500">
+                  {growthViewType === 'monthly' ? 'Penambahan jemaat per bulan (12 bulan terakhir)' : 'Total akumulasi jemaat bertumbuh'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Organic vs All Toggle */}
+              <button
+                onClick={() => {
+                  const next = !includeImported;
+                  setIncludeImported(next);
+                  loadGrowthData(next);
+                }}
+                disabled={loadingGrowth}
+                className={`text-xs px-2.5 py-1.5 rounded-lg font-semibold transition-all border cursor-pointer ${
+                  !includeImported
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                }`}
+                title="Pilih untuk mengecualikan lonjakan dari import data massal"
+              >
+                {!includeImported ? '✓ Hanya Organik' : 'Semua (+ Import)'}
+              </button>
+
+              {/* View Type Toggle */}
+              <div className="flex bg-gray-100 p-0.5 rounded-lg text-xs font-semibold">
+                <button
+                  onClick={() => setGrowthViewType('monthly')}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    growthViewType === 'monthly' ? 'bg-white text-gray-900 shadow-xs font-bold' : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  Bulanan
+                </button>
+                <button
+                  onClick={() => setGrowthViewType('cumulative')}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    growthViewType === 'cumulative' ? 'bg-white text-gray-900 shadow-xs font-bold' : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  Kumulatif
+                </button>
+              </div>
+            </div>
           </div>
-          <p className="text-sm text-gray-500 mb-6">Penambahan jemaat baru per bulan selama 12 bulan terakhir.</p>
-          
+
+          {!includeImported && (data.growth?.totalImported > 0) && (
+            <div className="mb-4 px-3 py-1.5 bg-blue-50/70 border border-blue-100 rounded-lg text-xs text-blue-700 flex items-center justify-between">
+              <span>💡 <strong>{data.growth.totalImported} data migrasi awal (import)</strong> dipisahkan agar tren pertumbuhan organik tetap riil.</span>
+            </div>
+          )}
+
           <div ref={ref} className="h-64 w-full">
-            <SVGGrowthChart data={data.growth?.trend || []} width={width} height={height} />
+            <SVGGrowthChart 
+              data={data.growth?.trend || []} 
+              width={width} 
+              height={height} 
+              viewType={growthViewType}
+            />
           </div>
         </div>
 

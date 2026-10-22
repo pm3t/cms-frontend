@@ -26,8 +26,10 @@ export const reportingService = {
   saveTemplate: (data: any) => api.post('/reports/templates', data).then(r => r.data),
   deleteTemplate: (id: string) => api.delete(`/reports/templates/${id}`),
 
-  getGrowthAnalytics: () => api.get('/reports/analytics/growth').then(r => r.data),
+  getGrowthAnalytics: (includeImported = false) => 
+    api.get('/reports/analytics/growth', { params: { includeImported } }).then(r => r.data),
   getEngagementMetrics: () => api.get('/reports/analytics/engagement').then(r => r.data),
   getFinancialAnalytics: () => api.get('/reports/analytics/financial').then(r => r.data),
-  getBenchmarking: () => api.get('/reports/analytics/benchmark').then(r => r.data),
+  getBenchmarking: (includeImported = false) => 
+    api.get('/reports/analytics/benchmark', { params: { includeImported } }).then(r => r.data),
 };
