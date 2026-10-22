@@ -129,13 +129,13 @@ export default function PastoralDashboard() {
       </div>
 
       {/* Modern Dashboard Navigation Tabs */}
-      <div className="flex border-b border-gray-200 overflow-x-auto no-scrollbar bg-white rounded-t-2xl px-4 shadow-sm border border-gray-100">
+      <div className="flex border-b border-gray-200 overflow-x-auto no-scrollbar bg-white rounded-t-2xl px-2 sm:px-4 shadow-sm border border-gray-100">
         {[
-          { id: 'VISITATIONS', name: 'Kunjungan (Visitations)', icon: HeartHandshake, color: 'text-rose-500' },
-          { id: 'COUNSELING', name: 'Konseling (Counseling)', icon: ShieldCheck, color: 'text-indigo-500' },
-          { id: 'PRAYERS', name: 'Pokok Doa (Prayer requests)', icon: Flame, color: 'text-amber-500' },
-          { id: 'CARE_GROUPS', name: 'Kelompok Kasih (Care Groups)', icon: Users2, color: 'text-blue-500' },
-          { id: 'CRISIS', name: 'Krisis & Kontak Darurat', icon: AlertOctagon, color: 'text-red-500' },
+          { id: 'VISITATIONS', name: 'Kunjungan', icon: HeartHandshake, color: 'text-rose-500' },
+          { id: 'COUNSELING', name: 'Konseling', icon: ShieldCheck, color: 'text-indigo-500' },
+          { id: 'PRAYERS', name: 'Pokok Doa', icon: Flame, color: 'text-amber-500' },
+          { id: 'CARE_GROUPS', name: 'Kelompok Kasih', icon: Users2, color: 'text-blue-500' },
+          { id: 'CRISIS', name: 'Krisis & Darurat', icon: AlertOctagon, color: 'text-red-500' },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -143,14 +143,14 @@ export default function PastoralDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabId)}
-              className={`flex items-center gap-2.5 px-6 py-5 text-sm font-bold border-b-2 transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex-1 min-w-fit flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold border-b-2 transition-all whitespace-nowrap cursor-pointer ${
                 isActive
                   ? 'border-blue-600 text-blue-600 translate-y-[1px]'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : tab.color}`} />
-              {tab.name}
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-blue-600' : tab.color}`} />
+              <span>{tab.name}</span>
             </button>
           );
         })}

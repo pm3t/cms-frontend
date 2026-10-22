@@ -163,19 +163,23 @@ export default function CommunicationDashboard() {
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="flex border-b border-gray-100 uppercase text-[10px] font-black tracking-widest text-gray-500 overflow-x-auto no-scrollbar">
+                <div className="flex border-b border-gray-200 overflow-x-auto no-scrollbar bg-white px-2">
                     {[
-                        { id: 'TEMPLATES', label: 'Templates', icon: Mail },
-                        { id: 'BULK', label: 'Bulk Send', icon: Send },
-                        { id: 'NEWSLETTERS', label: 'Newsletters', icon: BookOpen },
-                        { id: 'LOGS', label: 'History', icon: Clock },
+                        { id: 'TEMPLATES', label: 'Template Pesan', icon: Mail },
+                        { id: 'BULK', label: 'Kirim Massal', icon: Send },
+                        { id: 'NEWSLETTERS', label: 'Buletin & Newsletter', icon: BookOpen },
+                        { id: 'LOGS', label: 'Riwayat Pengiriman', icon: Clock },
                     ].map(tab => (
                         <button
                             key={tab.id}
-                            className={`flex-1 min-w-[120px] py-4 px-2 text-center hover:bg-gray-50 transition-all flex items-center justify-center gap-2 ${activeTab === tab.id ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50/30' : ''}`}
+                            className={`flex-1 min-w-[140px] py-4 px-4 text-center hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-sm font-bold border-b-2 whitespace-nowrap cursor-pointer ${
+                                activeTab === tab.id 
+                                    ? 'border-blue-600 text-blue-600 bg-blue-50/30' 
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
                             onClick={() => setActiveTab(tab.id as Tab)}
                         >
-                            <tab.icon className="w-3.5 h-3.5" />
+                            <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-blue-600' : 'text-gray-400'}`} />
                             {tab.label}
                         </button>
                     ))}
