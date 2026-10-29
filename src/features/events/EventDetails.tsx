@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../lib/axios';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, CheckCircle, XCircle, Trash2, Bell, Calendar, Clock, MapPin, ExternalLink } from 'lucide-react';
+import { ChevronLeft, CheckCircle, XCircle, Trash2, Bell, Calendar, Clock, MapPin, ExternalLink, Ban, RotateCcw } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 export default function EventDetails() {
@@ -35,13 +35,30 @@ export default function EventDetails() {
         }
     };
 
-    const handleRemoveReg = async (regId: string) => {
-        if (!confirm('Cancel this registration?')) return;
+    const handleToggleCancel = async (regId: string, currentStatus: string) => {
+        const isCancelled = currentStatus === 'CANCELLED';
+        const confirmMsg = isCancelled
+            ? 'Pulihkan pendaftaran ini kembali aktif (REGISTERED)?'
+            : 'Batalkan pendaftaran ini (status akan menjadi CANCELLED)?';
+        if (!confirm(confirmMsg)) return;
+
         try {
-            await api.patch(`/events/${id}/registrations/${regId}/checkin`, { status: 'CANCELLED' });
+            await api.patch(`/events/${id}/registrations/${regId}/checkin`, {
+                status: isCancelled ? 'REGISTERED' : 'CANCELLED'
+            });
             fetchDetails();
         } catch {
-            alert('Failed to cancel');
+            alert('Gagal mengubah status pendaftaran');
+        }
+    };
+
+    const handleDeleteReg = async (regId: string, name: string) => {
+        if (!confirm(`Hapus pendaftar "${name}" secara permanen dari database? Data yang dihapus tidak dapat dipulihkan.`)) return;
+        try {
+            await api.delete(`/events/${id}/registrations/${regId}`);
+            fetchDetails();
+        } catch (err: any) {
+            alert(err.response?.data?.error || 'Gagal menghapus pendaftar');
         }
     };
 
@@ -177,7 +194,7 @@ export default function EventDetails() {
                                             {reg.checkInTime ? new Date(reg.checkInTime).toLocaleTimeString('id-ID') : '-'}
                                         </td>
                                         <td className="px-5 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
+                                            <div className="flex items-center justify-end gap-1.5">
                                                 {reg.status !== 'CANCELLED' && (
                                                     <Button
                                                         variant={reg.status === 'ATTENDED' ? 'outline' : 'primary'}
@@ -189,7 +206,30 @@ export default function EventDetails() {
                                                         {reg.status === 'ATTENDED' ? 'Undo Check-in' : 'Check In'}
                                                     </Button>
                                                 )}
-                                                <button onClick={() => handleRemoveReg(reg.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded">
+
+                                                {/* Batalkan atau Pulihkan */}
+                                                <button
+                                                    onClick={() => handleToggleCancel(reg.id, reg.status)}
+                                                    className={`p-1.5 rounded transition-colors ${
+                                                        reg.status === 'CANCELLED'
+                                                            ? 'text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700'
+                                                            : 'text-gray-400 hover:text-amber-600 hover:bg-amber-50'
+                                                    }`}
+                                                    title={reg.status === 'CANCELLED' ? 'Pulihkan Pendaftaran' : 'Batalkan Pendaftaran'}
+                                                >
+                                                    {reg.status === 'CANCELLED' ? (
+                                                        <RotateCcw className="w-4 h-4" />
+                                                    ) : (
+                                                        <Ban className="w-4 h-4" />
+                                                    )}
+                                                </button>
+
+                                                {/* Hapus Permanen dari Database */}
+                                                <button
+                                                    onClick={() => handleDeleteReg(reg.id, reg.name)}
+                                                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                    title="Hapus Permanen dari Database"
+                                                >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
