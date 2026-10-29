@@ -825,12 +825,18 @@ export default function ChurchWebsite() {
 
                     <div className="space-y-1.5 pt-2">
                       <div className="flex items-center gap-2 text-xs text-slate-600">
-                        <Calendar className="w-4 h-4 text-indigo-500" />
-                        <span>Mulai: {new Date(e.startDate).toLocaleString('id-ID')}</span>
+                        <Calendar className="w-4 h-4 text-indigo-500 shrink-0" />
+                        <span>{new Date(e.startDate).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-slate-600">
+                        <Clock className="w-4 h-4 text-indigo-500 shrink-0" />
+                        <span className="font-semibold text-indigo-900 dark:text-indigo-300">
+                          {new Date(e.startDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':')} - {new Date(e.endDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':')} WIB
+                        </span>
                       </div>
                       {e.location && (
                         <div className="flex items-center gap-2 text-xs text-slate-600">
-                          <MapPin className="w-4 h-4 text-indigo-500" />
+                          <MapPin className="w-4 h-4 text-indigo-500 shrink-0" />
                           <span>Tempat: {e.location}</span>
                         </div>
                       )}

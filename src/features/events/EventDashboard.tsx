@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../lib/axios';
-import { Calendar, MapPin, Users, Plus, Pencil, Trash2, ChevronRight, X } from 'lucide-react';
+import { Calendar, MapPin, Users, Plus, Pencil, Trash2, ChevronRight, X, Clock, ExternalLink } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import EventForm from './EventForm';
 import { Link } from 'react-router-dom';
@@ -123,8 +123,10 @@ export default function EventDashboard() {
                                         </div>
                                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
                                             <div className="flex items-center gap-1.5">
-                                                <Calendar className="w-4 h-4 text-gray-400" />
-                                                <span>{dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} - {new Date(event.endDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                <Clock className="w-4 h-4 text-indigo-500" />
+                                                <span className="font-medium text-gray-700">
+                                                    {dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':')} - {new Date(event.endDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':')} WIB
+                                                </span>
                                             </div>
                                             {event.location && (
                                                 <div className="flex items-center gap-1.5">
@@ -150,14 +152,14 @@ export default function EventDashboard() {
                                                 <span className="hidden sm:inline">Manage</span>
                                             </Button>
                                         </Link>
-                                        <button onClick={() => openEdit(event)} className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg border border-transparent hover:border-indigo-100 transition-all">
+                                        <button onClick={() => openEdit(event)} className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg border border-transparent hover:border-indigo-100 transition-all" title="Edit Event">
                                             <Pencil className="w-4 h-4" />
                                         </button>
-                                        <button onClick={() => handleDelete(event.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-100 transition-all">
+                                        <button onClick={() => handleDelete(event.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-100 transition-all" title="Hapus Event">
                                             <Trash2 className="w-4 h-4" />
                                         </button>
-                                        <Link to={`/register-event/${event.id}`} target="_blank" title="Public Registration Link" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg border border-transparent hover:border-blue-100 transition-all">
-                                            <ChevronRight className="w-4 h-4" />
+                                        <Link to={`/register-event/${event.id}`} target="_blank" title="Buka Public Registration Link" className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg border border-transparent hover:border-indigo-100 transition-all">
+                                            <ExternalLink className="w-4 h-4" />
                                         </Link>
                                     </div>
                                 </div>

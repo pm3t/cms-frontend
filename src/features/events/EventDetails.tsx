@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../lib/axios';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, CheckCircle, XCircle, Trash2, Bell } from 'lucide-react';
+import { ChevronLeft, CheckCircle, XCircle, Trash2, Bell, Calendar, Clock, MapPin, ExternalLink } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 export default function EventDetails() {
@@ -67,17 +67,42 @@ export default function EventDetails() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-4">
-                <Link to="/events" className="p-2 bg-white rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">
-                    <ChevronLeft className="w-5 h-5" />
-                </Link>
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900">{event.title}</h2>
-                    <p className="text-gray-500 text-sm mt-1">
-                        {new Date(event.startDate).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })} • {event.location || 'No location'}
-                    </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start sm:items-center gap-4">
+                    <Link to="/events" className="p-2 bg-white rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 shrink-0">
+                        <ChevronLeft className="w-5 h-5" />
+                    </Link>
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-900">{event.title}</h2>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-gray-500 text-sm mt-1.5">
+                            <span className="flex items-center gap-1.5">
+                                <Calendar className="w-4 h-4 text-indigo-500" />
+                                {new Date(event.startDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                            </span>
+                            <span className="flex items-center gap-1.5 font-medium text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded text-xs">
+                                <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                                {new Date(event.startDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':')} - {new Date(event.endDate).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':')} WIB
+                            </span>
+                            {event.location && (
+                                <span className="flex items-center gap-1 text-xs text-gray-500">
+                                    <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                                    {event.location}
+                                </span>
+                            )}
+                        </div>
+                    </div>
                 </div>
-                <div className="ml-auto">
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                    <a
+                        href={`/register-event/${event.id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 shadow-sm transition-colors"
+                        title="Buka Public Registration Link"
+                    >
+                        <ExternalLink className="w-4 h-4 text-indigo-600" />
+                        <span>Public Link</span>
+                    </a>
                     <Button
                         onClick={handleSendReminders}
                         disabled={sendingReminders || event.registrations.length === 0}
