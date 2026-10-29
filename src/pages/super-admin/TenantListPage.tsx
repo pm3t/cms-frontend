@@ -13,6 +13,7 @@ import {
 import { 
   useTenants, 
   useUpdateTenantStatus, 
+  useDeleteTenant,
   useBulkDeleteTenants,
   useSuperAdminPlans,
   useUpdateTenantPlan 
@@ -27,8 +28,23 @@ const TenantListPage: React.FC = () => {
   const { data: tenants, isLoading } = useTenants();
   const { data: plans } = useSuperAdminPlans();
   const updateStatusMutation = useUpdateTenantStatus();
+  const deleteTenantMutation = useDeleteTenant();
   const bulkDeleteMutation = useBulkDeleteTenants();
   const updatePlanMutation = useUpdateTenantPlan();
+
+  const handleDeleteTenant = async (id: string, name: string) => {
+    const confirmMsg = `PERINGATAN HAPUS TENANT:\n\nApakah Anda yakin ingin menghapus "${name}" (ID: ${id})?\n\nPenghapusan ini akan menghapus PERMANEN seluruh data tenant ini, termasuk:\n- Semua anggota dan keluarga jemaat\n- Akun user admin dan staf\n- Catatan keuangan, persembahan, dan anggaran\n- Acara, ibadah, dan presensi\n- Seluruh dokumen dan pengaturan gereja\n\nTindakan ini TIDAK DAPAT DIBATALKAN. Lanjutkan?`;
+
+    if (window.confirm(confirmMsg)) {
+      try {
+        await deleteTenantMutation.mutateAsync(id);
+        setSelectedIds(prev => prev.filter(item => item !== id));
+        alert(`Tenant "${name}" dan seluruh datanya berhasil dihapus.`);
+      } catch (err) {
+        alert('Gagal menghapus tenant: ' + (err as Error).message);
+      }
+    }
+  };
 
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     const action = currentStatus === 'suspended' ? 'activate' : 'suspend';
@@ -215,18 +231,28 @@ const TenantListPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => handleToggleStatus(tenant.id, latestSub?.status)}
-                        disabled={updateStatusMutation.isPending}
-                        className={`p-2 rounded-lg transition-colors ${
-                          latestSub?.status === 'suspended' 
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                            : 'bg-red-100 text-red-700 hover:bg-red-200'
-                        }`}
-                        title={latestSub?.status === 'suspended' ? 'Aktifkan' : 'Tangguhkan'}
-                      >
-                        {latestSub?.status === 'suspended' ? <ShieldCheck className="h-5 w-5" /> : <ShieldAlert className="h-5 w-5" />}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => handleToggleStatus(tenant.id, latestSub?.status)}
+                          disabled={updateStatusMutation.isPending}
+                          className={`p-2 rounded-lg transition-colors ${
+                            latestSub?.status === 'suspended' 
+                              ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                              : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                          }`}
+                          title={latestSub?.status === 'suspended' ? 'Aktifkan Akses' : 'Tangguhkan Akses'}
+                        >
+                          {latestSub?.status === 'suspended' ? <ShieldCheck className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteTenant(tenant.id, tenant.name)}
+                          disabled={deleteTenantMutation.isPending}
+                          className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-colors"
+                          title="Hapus Tenant Beserta Seluruh Datanya"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

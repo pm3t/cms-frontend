@@ -32,6 +32,23 @@ export const useUpdateTenantStatus = () => {
 };
 
 /**
+ * Hook to delete a single tenant and all its associated data.
+ */
+export const useDeleteTenant = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.delete(`/super-admin/tenants/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['super-admin', 'tenants'] });
+    },
+  });
+};
+
+/**
  * Hook to bulk delete tenants.
  */
 export const useBulkDeleteTenants = () => {
